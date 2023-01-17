@@ -1,0 +1,20 @@
+[
+    {
+        "selector": "default",
+        "ip": "https://lvdgjosgame.ltgamesglobal.net",
+        "ipBackup": "https://lvdgjosgame.ltgamesglobal.net",
+        "minVer": "111",
+        "remoteCdnUrl": "https://lvdgjosdl.ltgamesglobal.net/testasset",
+        "remoteCdnBackupUrl": "https://lvdgjosdl.ltgamesglobal.net/testasset",
+        "apkUrl": "https://test.yourmom.com/11.apk",
+        "iosUrlScheme": "https://test.yourmom.com/11.apk",
+        "taAppid": "16860a4b5466464ead7ef6537ed0fac9",
+        "notice": {
+            "content": "正在维护中预计 11：00 开服",
+            "enable": 0
+        },
+        "isReview": false,
+        "logMonitorUrl": "https://test.yourmom.com/11.apk",
+        "version": ""
+    }
+]

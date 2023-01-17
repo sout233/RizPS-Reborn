@@ -1,0 +1,77 @@
+{
+    "en": {
+        "name": "English",
+        "version": "4",
+        "url": "https://cfgsdkos.yourmom.com/language/language/en.json"
+    },
+    "zh-CN": {
+        "name": "中文",
+        "version": "4",
+        "url": "https://cfgsdkos.yourmom.com/language/language/zh-CN.json"
+    },
+    "zh-TW": {
+        "name": "繁体中文",
+        "version": "5",
+        "url": "https://cfgsdkos.yourmom.com/language/language/zh-TW.json"
+    },
+    "zh-HK": {
+        "name": "繁体中文(HK)",
+        "version": "2",
+        "url": "https://cfgsdkos.yourmom.com/language/language/zh-HK.json"
+    },
+    "ja": {
+        "name": "日本語",
+        "version": "4",
+        "url": "https://cfgsdkos.yourmom.com/language/language/ja.json"
+    },
+    "ko": {
+        "name": "한국어",
+        "version": "6",
+        "url": "https://cfgsdkos.yourmom.com/language/language/ko.json"
+    },
+    "tr": {
+        "name": "Türkçe",
+        "version": "4",
+        "url": "https://cfgsdkos.yourmom.com/language/language/tr.json"
+    },
+    "ru": {
+        "name": "Русский",
+        "version": "4",
+        "url": "https://cfgsdkos.yourmom.com/language/language/ru.json"
+    },
+    "pt": {
+        "name": "Português",
+        "version": "4",
+        "url": "https://cfgsdkos.yourmom.com/language/language/pt.json"
+    },
+    "pt-BR": {
+        "name": "Português(BR)",
+        "version": "4",
+        "url": "https://cfgsdkos.yourmom.com/language/language/pt-BR.json"
+    },
+    "it": {
+        "name": "Italiano",
+        "version": "4",
+        "url": "https://cfgsdkos.yourmom.com/language/language/it.json"
+    },
+    "fr": {
+        "name": "Français",
+        "version": "4",
+        "url": "https://cfgsdkos.yourmom.com/language/language/fr.json"
+    },
+    "es": {
+        "name": "Español",
+        "version": "4",
+        "url": "https://cfgsdkos.yourmom.com/language/language/es.json"
+    },
+    "de": {
+        "name": "Deutsch",
+        "version": "4",
+        "url": "https://cfgsdkos.yourmom.com/language/language/de.json"
+    },
+    "th": {
+        "name": "ไทย",
+        "version": "2",
+        "url": "https://cfgsdkos.yourmom.com/language/language/th.json"
+    }
+}
