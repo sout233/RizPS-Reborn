@@ -11,7 +11,7 @@ RizPS-Reborn的运行本身并没有任何特殊要求，只需要一台运行Wi
 ## 运行RizPS-Reborn
 以下两种方法二选一：
 ### 直接下载
-你可以从[Github Release](../../../releases)中下载RizPS-Reborn的可执行文件
+你可以从[Github Release](../../releases)中下载RizPS-Reborn的可执行文件
 ### 自行编译
 安装`git` `rust` `cargo`
 
