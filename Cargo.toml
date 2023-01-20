@@ -20,3 +20,4 @@ rand = "0.8.4"
 bytebuffer = "0.2.1"
 colored = "2.0.0"
 ctrlc = "3.2.4"
+axum-server = { version = "0.3", features = ["tls-rustls"] }

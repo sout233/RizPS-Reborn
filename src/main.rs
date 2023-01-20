@@ -9,7 +9,7 @@ use axum::{
 use std::{
     path::Path,
     fs,
-    time::{SystemTime, UNIX_EPOCH, Duration}, str::FromStr
+    time::{SystemTime, UNIX_EPOCH, Duration}, str::FromStr, hash::Hash, collections::HashMap
 };
 use crypto::{
     md5::Md5,
@@ -23,6 +23,7 @@ use block_modes::{BlockMode, Cbc};
 use block_modes::block_padding::Pkcs7;
 use rand::seq::SliceRandom;
 use colored::Colorize;
+use axum_server::tls_rustls::RustlsConfig;
 
 type AesCbc = Cbc<Aes256, Pkcs7>;
 
@@ -178,6 +179,13 @@ async fn NetWorkTest() -> &'static str{
     "success"
 } 
 
+async fn testasset_https_to_http(axum::extract::Path(down_url): axum::extract::Path<HashMap<String, String>>) -> Vec<u8>{
+    let mut req_file_path: String = "./resources/".to_string() + down_url.get("platform").unwrap() + &"/".to_string() + down_url.get("file").unwrap();
+    println!("{} -> 请求平台：{req_platform} 文件：{req_file_url}","HTTPS.TO.HTTP".purple(), req_platform = down_url.get("platform").unwrap(), req_file_url = down_url.get("file").unwrap());
+    let read_content = fs::read(req_file_path).unwrap();
+    read_content
+}
+
 //为后端运营面板或各种插件提供的接口
 
 async fn get_test() -> &'static str{
@@ -191,7 +199,7 @@ async fn get_ios_shadowsocks_conf() -> String{
 
 #[tokio::main]
 async fn main() {
-    println!("\n- {} -\nRizPS-Reborn是免费且永久开源的软件，并遵循GPL-3开源协议，这意味着你若要发布修改后的RizPS-Reborn，则必须同时开源。如果你是通过购买的方式得到了该软件，那么这代表你已经被骗了，请给店家差评并申请退款。\n感谢任何对此项目提出建议/报告问题/贡献代码的人，我爱你们！\n","RizPS-Reborn v1.0.0".bright_blue());
+    println!("\n- {} -\nRizPS-Reborn是免费且永久开源的软件，并遵循GPL-3开源协议，这意味着你若要发布修改后的RizPS-Reborn，则必须同时开源。如果你是通过购买的方式得到了该软件，那么这代表你已经被骗了，请给店家差评并申请退款。\n感谢任何对此项目提出建议/报告问题/贡献代码的人，我爱你们！\n","RizPS-Reborn v1.0.1".bright_blue());
 
     if(!Path::new("./req_files").exists()){
         println!("{} -> req_files文件夹不存在，无法在此文件夹不存在的情况下继续维持RizPS-Reborn的运行，结束运行！","SERVER.INIT.ERROR".red());
@@ -202,9 +210,13 @@ async fn main() {
         std::process::exit(101);
     }//RizPS-Reborn完整性校验
 
+    if(!Path::new("./resources/Android/catalog_catalog.hash").exists()){
+        println!("{} -> resources文件夹不存在或内容不完整，在游玩时可能会出现大量报错以及无法下载更新和歌曲/铺面","SERVER.INIT.WARNING".bright_yellow())
+    }//res校验
+
     if(!Path::new("./config.json").exists()){
         println!("{} -> 配置文件 (./config.json) 不存在，正在尝试创建...","SERVER.INIT".blue());
-        fs::write("./config.json", "{\"server\": {\"ip\": \"0.0.0.0\",\"port\": \"80\"},\"output\": {\"loglevel\": \"0\"}}");
+        fs::write("./config.json", "{\"server\": {\"ip\": \"0.0.0.0\",\"port\": \"443\"},\"output\": {\"loglevel\": \"0\"}}");
     }
     else{
         println!("{} -> 配置文件存在，启动服务器~","SERVER.INIT".green())
@@ -238,6 +250,9 @@ async fn main() {
         .route("/login/guestLogin.do", any(GuestLogin_DO))
         .route("/login/sdkCheckLogin.do", any(SDKLogin_DO))
         .route("/SDKLogin", any(SDKLogin))
+        .route("/isc", any(get_ios_shadowsocks_conf))
+        .route("/test", any(NetWorkTest))
+        .route("/testasset/:platform/:file", any(testasset_https_to_http))//https转http
         .route("/checklive", any(get_test));
  
     ctrlc::set_handler(move || {
@@ -253,10 +268,17 @@ async fn main() {
     //既傻逼又屎山的代码，由于使用Value解析json导致key对应的内容带双引号，直接replace掉曲线救国🤣
     //我去，把我自己都整乐了
     let mut addr_with_port: String = server_conf["server"]["ip"].to_string().replace("\"", "") + &":" + &server_conf["server"]["port"].to_string().replace("\"", "");
-    println!("{} -> 服务器将在{addr_with_port}上启动~ 注意，是HTTP而非HTTPS!","SERVER.INIT".green());
+    println!("{} -> 服务器将在https://{addr_with_port}上启动~ 注意，是HTTPS而非HTTP!","SERVER.INIT".green());
+
+    let tls_config = RustlsConfig::from_pem_file(
+        "cert.pem",
+        "key.pem"
+    )
+    .await
+    .unwrap();//配置证书相关 如果证书没了可以这样生成：openssl req -x509 -newkey rsa:4096 -sha256 -nodes -keyout key.pem -out cert.pem -days 114514 前提是你有openssl
 
     //开服
-    axum::Server::bind(&addr_with_port.parse().unwrap())
+    axum_server::bind_rustls(addr_with_port.parse().unwrap(), tls_config)
         .serve(app.into_make_service())
         .await
         .unwrap();
