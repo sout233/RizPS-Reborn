@@ -209,9 +209,11 @@ async fn main() {
         std::process::exit(101);
     }//RizPS-Reborn完整性校验
 
+    /*
     if(!Path::new("./resources/Android/catalog_catalog.hash").exists()){
         println!("{} -> resources文件夹不存在或内容不完整，如果你打算离线游玩（使用FiddlerScript.cs），在游玩时可能会出现大量报错以及无法下载更新和歌曲/铺面。若您并未拥有resources，请前往RizPS-Reborn的Github Releases页面中下载。若您是在线游玩（使用FiddlerScriptOnline.cs），请忽视","SERVER.INIT.WARNING".bright_yellow())
     }//res校验
+    */
 
     if(!Path::new("./config.json").exists()){
         println!("{} -> 配置文件 (./config.json) 不存在，正在尝试创建...","SERVER.INIT".blue());
