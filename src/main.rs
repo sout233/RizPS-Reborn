@@ -19,7 +19,6 @@ use axum_server::tls_rustls::RustlsConfig;
 
 pub fn rsa_private_encrypt(content: &str, private_key: &str) -> String{
     println!("{} -> 准备加密的MD5：{content}","SDKLogin.RSAEncrypt".bright_yellow());
-    let mut rng = rand::thread_rng();
     let private_key = Rsa::private_key_from_pem(private_key.as_bytes()).unwrap();
     let mut buf = vec![0; private_key.size() as usize];
     let enc_data = private_key.private_encrypt(content.as_bytes(),&mut buf,Padding::PKCS1).unwrap();
