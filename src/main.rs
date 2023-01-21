@@ -165,6 +165,20 @@ async fn SDKLogin() -> (HeaderMap, String){
     (headers, aes_encrypt("Sv@H,+SV-U*VEjCW,n7WA-@n}j3;U;XF", "1%[OB.<YSw?)o:rQ".to_string(), fs::read_to_string("./SDKLogin.json").unwrap().as_str()))
 }
 
+async fn afterplay() -> (HeaderMap, String){
+    println!("{} -> 客户端打完了一首歌","AFTER.PLAY".yellow());
+    let mut sdklogin_hasher = Md5::new();
+    let origin_text = String::from("{\"data\": \"idk\"}");
+    sdklogin_hasher.input_str(&origin_text);
+    let rsa_signed: String = rsa_private_encrypt(sdklogin_hasher.result_str().as_str(), &fs::read_to_string("./RizPS-Reborn-Custom-RSA-Keys/private.pem").unwrap());
+    let mut headers = HeaderMap::new();
+    headers.insert(
+        HeaderName::from_static("sign"),
+        HeaderValue::from_static(string_to_static_str(rsa_signed))
+    );
+    (headers, aes_encrypt("Sv@H,+SV-U*VEjCW,n7WA-@n}j3;U;XF", "1%[OB.<YSw?)o:rQ".to_string(), "{\"data\": \"idk\"}"))
+}
+
 async fn NetWorkTest() -> &'static str{
     "success"
 } 
@@ -197,7 +211,7 @@ async fn get_ios_shadowsocks_conf() -> String{
 
 #[tokio::main]
 async fn main() {
-    println!("\n- {} -\nRizPS-Reborn是免费且永久开源的软件，并遵循GPL-3开源协议，这意味着你若要发布修改后的RizPS-Reborn，则必须同时开源。如果你是通过购买的方式得到了该软件，那么这代表你已经被骗了，请给店家差评并申请退款。\n感谢任何对此项目提出建议/报告问题/贡献代码的人，我爱你们！\n","RizPS-Reborn v1.0.1".bright_blue());
+    println!("\n- {} -\nRizPS-Reborn是免费且永久开源的软件，并遵循GPL-3开源协议，这意味着你若要发布修改后的RizPS-Reborn，则必须同时开源。如果你是通过购买的方式得到了该软件，那么这代表你已经被骗了，请给店家差评并申请退款。\n感谢任何对此项目提出建议/报告问题/贡献代码的人，我爱你们！\n","RizPS-Reborn v1.0.2".bright_blue());
 
     if(!Path::new("./req_files").exists()){
         println!("{} -> req_files文件夹不存在，无法在此文件夹不存在的情况下继续维持RizPS-Reborn的运行，结束运行！","SERVER.INIT.ERROR".red());
@@ -250,6 +264,7 @@ async fn main() {
         .route("/login/guestLogin.do", any(GuestLogin_DO))
         .route("/login/sdkCheckLogin.do", any(SDKLogin_DO))
         .route("/SDKLogin", any(SDKLogin))
+        .route("/after_play",any(afterplay))
         .route("/isc", any(get_ios_shadowsocks_conf))
         .route("/test", any(NetWorkTest))
         .route("/testasset/:platform/:file", any(resources_download))
