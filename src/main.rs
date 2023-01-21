@@ -15,7 +15,8 @@ use crypto::{
     md5::Md5,
     digest::Digest
 };
-use rsa::{PaddingScheme, RsaPrivateKey, RsaPublicKey, pkcs1::DecodeRsaPrivateKey, pkcs8::{DecodePublicKey, DecodePrivateKey}, PublicKey};
+use openssl::rsa::{Rsa, Padding};
+use openssl::hash::MessageDigest;
 use crypto::sha2::Sha256;
 use std::iter::repeat;
 use aes::Aes256;
@@ -24,25 +25,27 @@ use block_modes::block_padding::Pkcs7;
 use rand::seq::SliceRandom;
 use colored::Colorize;
 use axum_server::tls_rustls::RustlsConfig;
+use openssl::aes::{AesKey, aes_ige};
 
 type AesCbc = Cbc<Aes256, Pkcs7>;
 
 pub fn rsa_private_encrypt(content: &str, private_key: &str) -> String{
+    println!("{} -> 准备加密的MD5：{content}","SDKLogin.RSAEncrypt".bright_yellow());
     let mut rng = rand::thread_rng();
-    let private_key = RsaPrivateKey::from_pkcs8_pem(private_key).unwrap();
-    let enc_data = private_key.encrypt(&mut rng, PaddingScheme::PKCS1v15Encrypt, content.as_bytes()).unwrap();
-    let b64_enc_data: String = base64::encode(enc_data);
+    let private_key = Rsa::private_key_from_pem(private_key.as_bytes()).unwrap();
+    let mut buf = vec![0; private_key.size() as usize];
+    let enc_data = private_key.private_encrypt(content.as_bytes(),&mut buf,Padding::PKCS1).unwrap();
+    let b64_enc_data: String = base64::encode(buf);
+    println!("{} -> 已完成对SDKLogin.json的MD5加密","SDKLogin.RSAEncrypt".bright_yellow());
     b64_enc_data
 }
 
 pub fn aes_encrypt(key: &str, iv: String, data: &str) -> String {
-    let iv_str = iv;
-    let iv = iv_str.as_bytes();
-    let cipher = AesCbc::new_from_slices(key.as_bytes(), iv).unwrap();
-    let ciphertext = cipher.encrypt_vec(data.as_bytes());
-    let mut buffer = bytebuffer::ByteBuffer::from_bytes(iv);
-    buffer.write_bytes(&ciphertext);
-    base64::encode(buffer.to_bytes())
+    println!("{} -> 准备对SDKLogin.json进行AES加密","SDKLogin.AESEncrypt".bright_yellow());
+    let aes_encrypt_result = openssl::symm::encrypt(openssl::symm::Cipher::aes_256_cbc(), key.as_bytes(), Some(iv.as_bytes()), data.as_bytes()).unwrap();
+    let b64_enc_data: String = base64::encode(aes_encrypt_result);
+    println!("{} -> 已完成对SDKLogin.json的AES加密","SDKLogin.AESEncrypt".bright_yellow());
+    b64_enc_data
 }
 
 fn string_to_static_str(s: String) -> &'static str {
@@ -50,7 +53,7 @@ fn string_to_static_str(s: String) -> &'static str {
 }
 
 //http请求处理函数部分
- 
+
 async fn get_root() -> (HeaderMap, &'static str){
     let mut headers = HeaderMap::new();
     headers.insert(
@@ -179,9 +182,17 @@ async fn NetWorkTest() -> &'static str{
     "success"
 } 
 
-async fn testasset_https_to_http(axum::extract::Path(down_url): axum::extract::Path<HashMap<String, String>>) -> Vec<u8>{
+async fn resources_download(axum::extract::Path(down_url): axum::extract::Path<HashMap<String, String>>) -> Vec<u8>{
     let mut req_file_path: String = "./resources/".to_string() + down_url.get("platform").unwrap() + &"/".to_string() + down_url.get("file").unwrap();
-    println!("{} -> 请求平台：{req_platform} 文件：{req_file_url}","HTTPS.TO.HTTP".purple(), req_platform = down_url.get("platform").unwrap(), req_file_url = down_url.get("file").unwrap());
+    println!("{} -> 请求平台：{req_platform} 文件：{req_file_url}","Resource.Download".purple(), req_platform = down_url.get("platform").unwrap(), req_file_url = down_url.get("file").unwrap());
+    let read_content = fs::read(req_file_path).unwrap();
+    read_content
+}
+
+async fn songs_download(axum::extract::Path(down_url): axum::extract::Path<HashMap<String, String>>) -> Vec<u8>{
+    let mut req_file_path: String = "./resources/".to_string() + down_url.get("platform").unwrap() + &"/".to_string() + down_url.get("req_file_no_bundle").unwrap() + &".bundle".to_string();
+    println!("{} -> 请求平台：{req_platform} 文件：{req_file_url}","Songs/Sheets.Download".purple(), req_platform = down_url.get("platform").unwrap(), req_file_url = down_url.get("req_file_no_bundle").unwrap());
+    println!("{req_file_path}");
     let read_content = fs::read(req_file_path).unwrap();
     read_content
 }
@@ -211,7 +222,7 @@ async fn main() {
     }//RizPS-Reborn完整性校验
 
     if(!Path::new("./resources/Android/catalog_catalog.hash").exists()){
-        println!("{} -> resources文件夹不存在或内容不完整，在游玩时可能会出现大量报错以及无法下载更新和歌曲/铺面","SERVER.INIT.WARNING".bright_yellow())
+        println!("{} -> resources文件夹不存在或内容不完整，如果你打算离线游玩（使用FiddlerScript.cs），在游玩时可能会出现大量报错以及无法下载更新和歌曲/铺面。若您并未拥有resources，请前往RizPS-Reborn的Github Releases页面中下载。若您是在线游玩（使用FiddlerScriptOnline.cs），请忽视","SERVER.INIT.WARNING".bright_yellow())
     }//res校验
 
     if(!Path::new("./config.json").exists()){
@@ -252,7 +263,8 @@ async fn main() {
         .route("/SDKLogin", any(SDKLogin))
         .route("/isc", any(get_ios_shadowsocks_conf))
         .route("/test", any(NetWorkTest))
-        .route("/testasset/:platform/:file", any(testasset_https_to_http))//https转http
+        .route("/testasset/:platform/:file", any(resources_download))
+        .route("/songsdata/:platform/cridata_assets_criaddressables/:req_file_no_bundle", any(songs_download))
         .route("/checklive", any(get_test));
  
     ctrlc::set_handler(move || {
