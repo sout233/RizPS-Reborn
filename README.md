@@ -10,7 +10,7 @@ RizPS-Reborn的运行本身并没有任何特殊要求，只需要一台运行Wi
 ## 1.运行RizPS-Reborn
 以下两种方法二选一：
 ### 直接下载
-你可以从[Github Release](../../releases)中下载RizPS-Reborn的可执行文件，名称看起来大概是`RizPS-Reborn-版本.zip`，下载并解压后便能得到RizPS-Reborn的可执行文件和一些附带的必要文件了，请一定要把`RizPS-Reborn.exe`和那些附带的文件或文件夹放在一起，否则将无法启动RizPS-Reborn。
+你可以从[Github Release](../../releases)中下载RizPS-Reborn的 **最新** 可执行文件，名称看起来大概是`RizPS-Reborn-版本.zip`，下载并解压后便能得到RizPS-Reborn的可执行文件和一些附带的必要文件了，请一定要把`RizPS-Reborn.exe`和那些附带的文件或文件夹放在一起，否则将无法启动RizPS-Reborn。
 
 得到可执行文件后，直接双击`RizPS-Reborn.exe`即可运行RizPS-Reborn。哦买噶，这实在是太简单了！接下来，请保持RizPS-Reborn的运行，并且不要关闭弹出的命令行窗口，因为关闭弹出的窗口=关闭RizPS-Reborn
 ### 自行编译
