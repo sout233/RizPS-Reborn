@@ -11,13 +11,32 @@ class Handlers
     
     static function OnBeforeRequest(oS: Session) {
         if(oS.host.Contains("google") || oS.host.Contains("amazon") || oS.host.Contains("baidu")){
+            if (oS.HTTPMethodIs("CONNECT"))
+            {
+                oS["x-replywithtunnel"] = "FakeTunnel";
+                return;
+            }//CONNECT请求处理
             oS.oRequest.headers.UriScheme = "https"
             oS.host = server_ip
             oS.port = server_port
             //屏蔽谷歌以强制游客登陆
         }
         else if(oS.host.Contains("lvdgjosdl")){
+            if(oS.fullUrl.Contains("cridata")){
+                //啥都不干
+            }
+            /*
+            else{
+                if (oS.HTTPMethodIs("CONNECT"))
+                {
+                    oS["x-replywithtunnel"] = "FakeTunnel";
+                    return;
+                }//CONNECT请求处理
+                oS.host = server_ip
+                oS.port = server_port
+            }
             //什么都不干
+*/
         }
         else if(oS.host.Contains("leiting") || oS.host.Contains("ltgames") || oS.host.Contains("lt")) {
             if (oS.HTTPMethodIs("CONNECT"))

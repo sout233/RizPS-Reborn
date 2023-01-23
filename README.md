@@ -85,13 +85,13 @@ sudo yum install openssl openssl-devel #CentOS
 ### 直接下载并安装RizPS-Reborn定制客户端（推荐）
 Android：https://anonfiles.com/lb7eg6O0y8/Rizline_For_RizPS_1.0.2_2.0_apk 下载并直接安装即可 打开下载链接需要梯子
 
-iOS：https://anonfiles.com/K8He4bT3y4/Payload_ipa 打开下载链接需要梯子 请看下方安装教程安装：
+iOS：https://anonfiles.com/b9R645T9y9/Payload_ipa 打开下载链接需要梯子 请看下方安装教程安装：
 
 安装[iTunes](https://www.apple.com/itunes/download/win64)
 
 下载[Sideloadly](https://sideloadly.io/#download)
 
-以 **管理员身份** 打开Sideloadly，选择你的手机和下载的ipa文件，然后输入你的AppleID（通常是邮箱），再点Advanced Options，勾选下面的Remove limit on supported devices，然后直接点下面的Start，按照提示输入密码和验证码，然后等一段时间，如果没出错的话，手机上就会出现游戏图标
+以 **管理员身份** 打开Sideloadly，选择你的手机和下载的ipa文件，然后输入你的AppleID（通常是邮箱），再点Advanced Options，勾选下面的Remove limit on supported devices，然后直接点下面的Start，按照提示输入密码和验证码，然后等一段时间，如果没出错的话，手机上就会出现游戏图标 在安装时出现任何问题都请换一个AppleID或者重启电脑试试 谁知道呢 万一有用呢
 
 此时直接打开游戏是打不开的，你需要信任开发者并开启开发者模式：
 
@@ -120,13 +120,32 @@ class Handlers
     
     static function OnBeforeRequest(oS: Session) {
         if(oS.host.Contains("google") || oS.host.Contains("amazon") || oS.host.Contains("baidu")){
+            if (oS.HTTPMethodIs("CONNECT"))
+            {
+                oS["x-replywithtunnel"] = "FakeTunnel";
+                return;
+            }//CONNECT请求处理
             oS.oRequest.headers.UriScheme = "https"
             oS.host = server_ip
             oS.port = server_port
             //屏蔽谷歌以强制游客登陆
         }
         else if(oS.host.Contains("lvdgjosdl")){
+            if(oS.fullUrl.Contains("cridata")){
+                //啥都不干
+            }
+            /*
+            else{
+                if (oS.HTTPMethodIs("CONNECT"))
+                {
+                    oS["x-replywithtunnel"] = "FakeTunnel";
+                    return;
+                }//CONNECT请求处理
+                oS.host = server_ip
+                oS.port = server_port
+            }
             //什么都不干
+*/
         }
         else if(oS.host.Contains("leiting") || oS.host.Contains("ltgames") || oS.host.Contains("lt")) {
             if (oS.HTTPMethodIs("CONNECT"))
