@@ -85,7 +85,7 @@ sudo yum install openssl openssl-devel #CentOS
 ### 直接下载并安装RizPS-Reborn定制客户端（推荐）
 Android：https://anonfiles.com/lb7eg6O0y8/Rizline_For_RizPS_1.0.2_2.0_apk 下载并直接安装即可 打开下载链接需要梯子
 
-iOS：打开下载链接需要梯子 请看下方安装教程安装：
+iOS：https://anonfiles.com/K8He4bT3y4/Payload_ipa 打开下载链接需要梯子 请看下方安装教程安装：
 
 安装[iTunes](https://www.apple.com/itunes/download/win64)
 
