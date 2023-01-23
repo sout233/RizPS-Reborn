@@ -83,9 +83,23 @@ sudo yum install openssl openssl-devel #CentOS
 
 ## 3.安装或制作RizPS-Reborn定制游戏客户端
 ### 直接下载并安装RizPS-Reborn定制客户端（推荐）
-Android：https://anonfiles.com/lb7eg6O0y8/Rizline_For_RizPS_1.0.2_2.0_apk 下载并直接安装即可
+Android：https://anonfiles.com/lb7eg6O0y8/Rizline_For_RizPS_1.0.2_2.0_apk 下载并直接安装即可 打开下载链接需要梯子
 
-iOS：Coming Soon
+iOS：打开下载链接需要梯子 请看下方安装教程安装：
+
+安装[iTunes](https://www.apple.com/itunes/download/win64)
+
+下载[Sideloadly](https://sideloadly.io/#download)
+
+以 **管理员身份** 打开Sideloadly，选择你的手机和下载的ipa文件，然后输入你的AppleID（通常是邮箱），再点Advanced Options，勾选下面的Remove limit on supported devices，然后直接点下面的Start，按照提示输入密码和验证码，然后等一段时间，如果没出错的话，手机上就会出现游戏图标
+
+此时直接打开游戏是打不开的，你需要信任开发者并开启开发者模式：
+
+开启开发者模式：设置 > 隐私与安全性 > 开发者模式，打开开发者模式，随后按照提示重启设备并输入密码即可
+
+信任开发者：设置 > 通用 > VPN与设备管理 > 开发者app（名称为你的appleid邮箱） > 信任，按照提示输入密码并信任即可
+
+然后这部分就完成了，继续看下去吧~
 
 ### 制作RizPS-Reborn定制客户端（不推荐）
 这个教程还没写好呢，别急嘛别急嘛~
@@ -138,12 +152,12 @@ class Handlers
 
 然后点上面的`Save Script`即可
 
-## 5.连接RizPS-Reborn
+## 5.连接RizPS-Reborn并游玩
 iOS：回到Shadowrocket，然后选中新增的本地节点，回到最上方，把连接开关打开
 
 Android：回到Proxydroid，把`Proxy Switch`开关打开
 
-然后打开RizPS-Reborn定制客户端即可
+然后直接打开RizPS-Reborn定制客户端并游玩即可
 
 玩够了以后记得关掉Shadowrocket或Proxydroid的连接开关，否则会无法正常联网
 
