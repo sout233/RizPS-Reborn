@@ -168,6 +168,7 @@ class Handlers
 
 };
 ```
+按照提示修改第8行的内容
 
 然后点上面的`Save Script`即可
 
