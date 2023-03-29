@@ -1,6 +1,6 @@
-# RizPS-Reborn
+# RizPS-Reborn (RZPR)
 ## 项目介绍
-RizPS-Reborn是针对 **某款简约风全屏判定音乐游戏** 的服务端重实现，可实现让你无任何限制地随意畅玩这款游戏。RizPS-Reborn的名称中虽然包含RizPS，但它与RizPS这个已经被DMCA的项目不存在任何关系与关联，RizPS-Reborn是一款全新 **从0开始编写** 的开源项目
+RizPS-Reborn（简称为RZPR）是针对 **某款简约风全屏判定音乐游戏** 的服务端重实现，可实现让你无任何限制地随意畅玩这款游戏。RizPS-Reborn的名称中虽然包含RizPS，但它与RizPS这个已经被DMCA的项目不存在任何关系与关联，RizPS-Reborn是一款全新 **从0开始编写** 的开源项目
 
 ## 运行要求
 RizPS-Reborn的运行本身并没有任何特殊要求，只需要一台运行Windows操作系统的电脑，若您正在使用MacOS或Linux，也可以自行下载源代码进行编译运行
@@ -36,10 +36,17 @@ sudo yum install openssl openssl-devel #CentOS
 
 安装OpenSSL开发套件（Windows）：
 
-按照[这个在Stackoverflow上的回答](https://stackoverflow.com/a/61921362)操作，并将含有vcpkg可执行文件的目录添加到环境变量PATH
+从[这里](https://slproweb.com/products/Win32OpenSSL.html)下载最新版本的Win64 OpenSSL Installer
 
-若您在中国大陆，在按步骤操作时别忘了打开梯子，建议使用TUN模式（建议Clash for Windows，Linux可以使用cgproxy + v2ray）而非HTTP代理
+下完毕后直接双击打开然后安装，安装时请记住安装路径
 
+安装完毕后打开cmd，用以下命令设置***临时***环境变量，我相信你会自己替换路径的对吧？
+```cmd
+$env:OPENSSL_LIB_DIR="C:\Program Files\OpenSSL-Win64\lib"
+$env:OPENSSL_INCLUDE_DIR="C:\Program Files\OpenSSL-Win64\include"
+$env:OPENSSL_DIR="C:\Program Files\OpenSSL-Win64"
+```
+请注意：此处设置的是***临时***环境变量，只在执行了这3行命令的cmd窗口中生效，编译命令也必须在此窗口中执行，若新开一个cmd窗口，则需再执行一遍这3行命令
 <br/>
 
 编译并运行：
@@ -130,23 +137,6 @@ class Handlers
             oS.port = server_port
             //屏蔽谷歌以强制游客登陆
         }
-        else if(oS.host.Contains("lvdgjosdl")){
-            if(oS.fullUrl.Contains("cridata")){
-                //啥都不干
-            }
-            /*
-            else{
-                if (oS.HTTPMethodIs("CONNECT"))
-                {
-                    oS["x-replywithtunnel"] = "FakeTunnel";
-                    return;
-                }//CONNECT请求处理
-                oS.host = server_ip
-                oS.port = server_port
-            }
-            //什么都不干
-*/
-        }
         else if(oS.host.Contains("leiting") || oS.host.Contains("ltgames") || oS.host.Contains("lt")) {
             if (oS.HTTPMethodIs("CONNECT"))
             {
@@ -159,13 +149,7 @@ class Handlers
                 oS.fullUrl = oS.fullUrl.Replace("testasset","songsdata");
             }
         }
-
-
     }
-    static function OnBeforceResponse(oS: Session){
-        
-    }
-
 };
 ```
 按照提示修改第8行的内容
@@ -185,7 +169,8 @@ Android：回到Proxydroid，把`Proxy Switch`开关打开
 叉掉一开始的RizPS-Reborn命令行窗口，然后叉掉Fiddler Classic，确保手机上的Shadowrocket或Proxydroid的代理开关都已关闭即可
 
 ## 注意事项
-呃，这里后续再补充
+1. 使用本项目造成的一切法律问题作者既不承担
+2. 若您使用的是iOS并使用共享账号下载Shadowrocket，请注意个人手机安全，不要将账号登进iCloud，只登AppStore然后下载就好了
 
 ## 社区
 Discord：https://discord.gg/MJcGm6MxUj

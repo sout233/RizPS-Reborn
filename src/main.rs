@@ -1,3 +1,5 @@
+mod structs;
+
 use axum::{
     routing::any,
     http::{header::{HeaderMap, HeaderName, HeaderValue},header},
@@ -16,6 +18,7 @@ use crypto::{
 use openssl::rsa::{Rsa, Padding};
 use colored::Colorize;
 use axum_server::tls_rustls::RustlsConfig;
+use structs::{SDKLogin_JSON};
 
 pub fn rsa_private_encrypt(content: &str, private_key: &str) -> String{
     println!("{} -> 准备加密的MD5：{content}","SDKLogin.RSAEncrypt".bright_yellow());
@@ -23,15 +26,15 @@ pub fn rsa_private_encrypt(content: &str, private_key: &str) -> String{
     let mut buf = vec![0; private_key.size() as usize];
     let enc_data = private_key.private_encrypt(content.as_bytes(),&mut buf,Padding::PKCS1).unwrap();
     let b64_enc_data: String = base64::encode(buf);
-    println!("{} -> 已完成对SDKLogin.json的MD5加密","SDKLogin.RSAEncrypt".bright_yellow());
+    println!("{} -> 已完成对明文的MD5加密","SDKLogin.RSAEncrypt".bright_yellow());
     b64_enc_data
 }
 
 pub fn aes_encrypt(key: &str, iv: String, data: &str) -> String {
-    println!("{} -> 准备对SDKLogin.json进行AES加密","SDKLogin.AESEncrypt".bright_yellow());
+    println!("{} -> 准备对明文进行AES加密","SDKLogin.AESEncrypt".bright_yellow());
     let aes_encrypt_result = openssl::symm::encrypt(openssl::symm::Cipher::aes_256_cbc(), key.as_bytes(), Some(iv.as_bytes()), data.as_bytes()).unwrap();
     let b64_enc_data: String = base64::encode(aes_encrypt_result);
-    println!("{} -> 已完成对SDKLogin.json的AES加密","SDKLogin.AESEncrypt".bright_yellow());
+    println!("{} -> 已完成对明文的AES加密","SDKLogin.AESEncrypt".bright_yellow());
     b64_enc_data
 }
 
@@ -118,18 +121,6 @@ async fn sdk_lang_zhtw() -> String{
     read_result
 }
 
-//游戏catalog与catalog hash，更新离线必须
-
-async fn ret_catalog() -> String{
-    let read_result: String = fs::read_to_string("./req_files/riz102-catalog.json").unwrap();
-    read_result
-}
-
-async fn ret_catalog_hash() -> String{
-    let read_result: String = fs::read_to_string("./req_files/riz102-catalog-hash.txt").unwrap();
-    read_result
-}
-
 //游戏本体请求处理部分
 
 async fn InGameErrorReport(Json(errinfo) : Json<serde_json::Value>) -> String{
@@ -198,6 +189,19 @@ async fn songs_download(axum::extract::Path(down_url): axum::extract::Path<HashM
     read_content
 }
 
+async fn logback() -> (HeaderMap, String){
+    let mut logback_hasher = Md5::new();
+    let origin_text = String::from("{\"data\": \"idk\"}");
+    logback_hasher.input_str(&origin_text);
+    let rsa_signed: String = rsa_private_encrypt(logback_hasher.result_str().as_str(), &fs::read_to_string("./RizPS-Reborn-Custom-RSA-Keys/private.pem").unwrap());
+    let mut headers = HeaderMap::new();
+    headers.insert(
+        HeaderName::from_static("sign"),
+        HeaderValue::from_static(string_to_static_str(rsa_signed))
+    );
+    (headers, aes_encrypt("Sv@H,+SV-U*VEjCW,n7WA-@n}j3;U;XF", "1%[OB.<YSw?)o:rQ".to_string(), "success"))
+}
+
 //为后端运营面板或各种插件提供的接口
 
 async fn get_test() -> &'static str{
@@ -227,10 +231,11 @@ async fn main() {
         println!("{} -> resources文件夹不存在或内容不完整，如果你打算离线游玩（使用FiddlerScript.cs），在游玩时可能会出现大量报错以及无法下载更新和歌曲/铺面。若您并未拥有resources，请前往RizPS-Reborn的Github Releases页面中下载。若您是在线游玩（使用FiddlerScriptOnline.cs），请忽视","SERVER.INIT.WARNING".bright_yellow())
     }//res校验
     */
+    //我为什么砍res功能？首先你先别急，然后你再别急
 
     if(!Path::new("./config.json").exists()){
         println!("{} -> 配置文件 (./config.json) 不存在，正在尝试创建...","SERVER.INIT".blue());
-        fs::write("./config.json", "{\"server\": {\"ip\": \"0.0.0.0\",\"port\": \"443\"},\"output\": {\"loglevel\": \"0\"}}");
+        fs::write("./config.json", "{\"server\": {\"ip\": \"0.0.0.0\",\"port\": \"443\",\"web_panel\":\"true\",\"web_panel_ip\":\"0.0.0.0\",\"web_panel_port\":\"1275\"},\"output\": {\"loglevel\": \"0\"}}");
     }
     else{
         println!("{} -> 配置文件存在，启动服务器~","SERVER.INIT".green())
@@ -255,8 +260,6 @@ async fn main() {
         .route("/elva/api/SdkTrack/ExceptionTrack", any(sdk_ExceptionTrack))
         .route("/api/v1.0/rules", any(sdk_api_rules))
         .route("/elva/api/initset", any(sdk_initset))
-        .route("/testasset/iOS/catalog_catalog.json", any(ret_catalog))//仅离线更新功能需要，平时用不到
-        .route("/testasset/iOS/catalog_catalog.hash", any(ret_catalog_hash))//这个也是仅离线更新才用得到
         .route("/language/language/zh-CN.json", any(sdk_lang_zh))
         .route("/language/language/zh-HK.json", any(sdk_lang_zhk))
         .route("/language/language/zh-TW.json", any(sdk_lang_zhtw))
