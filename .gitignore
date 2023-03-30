@@ -4,3 +4,6 @@
 /resources
 #编辑器文件夹
 .idea
+#rizps-reborn运行时生成文件
+accounts.rzpr
+config.json

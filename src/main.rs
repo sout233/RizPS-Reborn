@@ -58,9 +58,15 @@ pub fn is_user_exists(username: String) -> bool{
 }
 
 pub fn get_serde_accountfile() -> RZPR_ACJson{
-    let account_json: String = fs::read_to_string("./accounts.rzpr").unwrap();
-    let accounts: structs::RZPR_ACJson = serde_json::from_str(&*account_json).unwrap();
+    let account_json = fs::File::open("./accounts.rzpr").unwrap();
+    let accounts: structs::RZPR_ACJson = serde_json::from_reader(account_json).unwrap();
     accounts
+}
+
+pub fn get_serde_basesdklogin() -> SDKLogin_JSON{
+    let sdkl_json = fs::File::open("./SDKLogin.json").unwrap();
+    let sdklogin_serde: structs::SDKLogin_JSON = serde_json::from_reader(sdkl_json).unwrap();
+    sdklogin_serde
 }
 
 pub fn generate_random_string(length: usize) -> String {
@@ -69,6 +75,17 @@ pub fn generate_random_string(length: usize) -> String {
         .take(length)
         .map(char::from)
         .collect()
+}
+
+pub fn isLogLevelHigh() -> bool{
+    let server_conf_file = fs::File::open("./config.json").unwrap();
+    let server_conf: serde_json::Value = serde_json::from_reader(server_conf_file).unwrap();
+    if(server_conf["output"]["loglevel"].to_string().replace("\"","") == "1"){
+        true
+    }
+    else{
+        false
+    }
 }
 
 //http请求处理函数部分
@@ -161,17 +178,20 @@ async fn GuestLogin_DO() -> String{
     println!("{} -> 客户端正在尝试注册账号","GUESTLOGIN.DO".yellow());
     let timestamp_now : String = (SystemTime::now().duration_since(UNIX_EPOCH)).unwrap().as_secs().to_string();
     let give_new_username: &str = &*generate_random_string(12);
-    let &mut new_user_account_struct = structs::RZPR_Accounts{
-        sdklogin_username: ("用户_" + timestamp_now + "#" + give_new_username).to_string(),
+    let mut new_user_account_struct = structs::RZPR_Accounts{
+        sdklogin_username: ("用户_".to_string() + &timestamp_now + "#" + give_new_username).to_string(),
         sdklogin_coin: 0,
         sdklogin_dot: 0,
         sdklogin_lastmadecardid: 0,
         sdklogin_bests: Vec::from([]),//新用户那必须得空啊
         sdklogin_uklevels: Vec::from(["track.PastelLines.RekuMochizuki.0".to_string(),"track.Gleam.Uske.0".to_string(),"track.PowerAttack.EBIMAYO.0".to_string()]),//新人三件套
     };
-    let newacfile = get_serde_accountfile().rzprac_items.append(new_user_account_struct);
-
-    let json = serde_json::to_string(&newacfile).unwrap();
+    let mut newacfile = get_serde_accountfile();
+    newacfile.rzprac_items.push(new_user_account_struct);
+    let json:String = serde_json::to_string(&newacfile).unwrap();
+    if(isLogLevelHigh()){
+        println!("用户账号注册的反序列化结果：{}",json);
+    }
     fs::write("./accounts.rzpr", json);
     let ret: String = "{\"message\":\"{\\\"timestamp\\\":\\\"".to_string() + &timestamp_now + &"\\\",\\\"sid\\\":\\\""+ give_new_username + &"\\\",\\\"warnEndDate\\\":null,\\\"token\\\":\\\"我是翟健，我被困在无人的大沙漠里了，我现在需要钱来支撑我出去，V我50，出去后听我讲述我对私服的报仇计划\\\",\\\"cmtBirth\\\":\\\"9\\\",\\\"bind\\\":\\\"9\\\"}\",\"status\":\"1\"}".to_string();
     ret
@@ -180,13 +200,15 @@ async fn GuestLogin_DO() -> String{
 async fn SDKLogin_DO() -> String{
     println!("{} -> 客户端正在尝试使用SDK登录","SDKLOGIN.DO".yellow());
     let timestamp_now : String = (SystemTime::now().duration_since(UNIX_EPOCH)).unwrap().as_secs().to_string();
-    let ret: String = "{\"message\":\"{\\\"timestamp\\\":\\\"".to_string() + &timestamp_now + &"\\\",\\\"warnEndDate\\\":null,\\\"token\\\":\\\"什么，这不是饼干，这是RizPS-Reborn！我们这个RizPS-Reborn体积小方便携带，拆开一包，放水里就变大，怎么扯都扯不坏，用来嫖鸽游，夜袭CN115，惹惹翟健，都是很好用的。你看解压以后比Grasscutter还小，放在水里遇水变大变高，吸水性很强的。解压以后，是一只四肢健全的RizPS-Reborn，你看他怎么擦都擦不坏，好不掉毛不掉絮，使用七八次都没问题，出差旅行带上它非常方便，用它SDKCheckLogin.do，再SDKLogin，AESEncrypt，干净卫生。什么?在哪里买?下方Gayhub，买五包送五包，还包邮\\\",\\\"priority\\\":0,\\\"cmtBirth\\\":\\\"9\\\",\\\"bind\\\":\\\"9\\\"}\",\"status\":\"1\"}".to_string();
+    let ret: String = "{\"message\":\"{\\\"timestamp\\\":\\\"".to_string() + &timestamp_now + &"\\\",\\\"warnEndDate\\\":null,\\\"token\\\":\\\"什么，这不是饼干，这是RizPS-Reborn！我们这个RizPS-Reborn体积小方便携带，拆开一包，放水里就变大，怎么扯都扯不坏，用来嫖鸽游，夜袭CN115，惹惹翟健，都是很好用的。你看解压以后比Grasscutter还小，放在水里遇水变大变高，吸水性很强的。解压以后，是一只四肢健全的RizPS-Reborn，你看他怎么擦都擦不坏，好不掉毛不掉絮，使用七八次都没问题，出差旅行带上它非常方便，用它SDKCheckLogin.do，再SDKLogin，AESEncrypt，干净卫生。什么?在哪里买?下方Gayhub，买五包送五包，还包邮 Powered By 矮人科技\\\",\\\"priority\\\":0,\\\"cmtBirth\\\":\\\"9\\\",\\\"bind\\\":\\\"9\\\"}\",\"status\":\"1\"}".to_string();
     ret
 }
 
-async fn SDKLogin() -> (HeaderMap, String){
+async fn SDKLogin(Json(post_body) : Json<structs::PostBody_SDKLogin>) -> (HeaderMap, String){
     println!("{} -> 客户端正在尝试下载存档数据","SDKLOGIN".yellow());
     let mut sdklogin_hasher = Md5::new();
+    let mut sdklogin_serde = get_serde_basesdklogin();
+
     let origin_text = String::from(fs::read_to_string("./SDKLogin.json").unwrap());
     sdklogin_hasher.input_str(&origin_text);
     let rsa_signed: String = rsa_private_encrypt(sdklogin_hasher.result_str().as_str(), &fs::read_to_string("./RizPS-Reborn-Custom-RSA-Keys/private.pem").unwrap());
@@ -285,7 +307,7 @@ async fn main() {
 
     if(!Path::new("./accounts.rzpr").exists()){
         println!("{} -> 账号数据文件 (./accounts.rzpr) 不存在，正在尝试创建...","SERVER.INIT".blue());
-        fs::write("./accounts.rzpr", "{{\"sdklogin_username\": \"rzpusers\",\"sdklogin_coin\": 114514,\"sdklogin_dot\": 1919810,\"sdklogin_lastmadecardid\": 0,\"sdklogin_bests\": [],\"sdklogin_uklevels\": [\"track.PastelLines.RekuMochizuki.0\",\"track.Gleam.Uske.0\",\"track.PowerAttack.EBIMAYO.0\"]}}");
+        fs::write("./accounts.rzpr", "{\"rzprac_items\": [{\"sdklogin_username\": \"rzpusers\",\"sdklogin_coin\": 114514,\"sdklogin_dot\": 1919810,\"sdklogin_lastmadecardid\": 0,\"sdklogin_bests\": [],\"sdklogin_uklevels\": [\"track.PastelLines.RekuMochizuki.0\",\"track.Gleam.Uske.0\",\"track.PowerAttack.EBIMAYO.0\"]}]}");
     }
     else{
         println!("{} -> 配置文件存在，启动服务器~","SERVER.INIT".green())
@@ -338,6 +360,10 @@ async fn main() {
     //既傻逼又屎山的代码，由于使用Value解析json导致key对应的内容带双引号，直接replace掉曲线救国🤣
     //我去，把我自己都整乐了
     let mut addr_with_port: String = server_conf["server"]["ip"].to_string().replace("\"", "") + &":" + &server_conf["server"]["port"].to_string().replace("\"", "");
+    println!("{} -> 高日志等级：{}","SERVER.INIT".green(),isLogLevelHigh());
+    if(isLogLevelHigh()){
+        println!("{} -> 日志等级为高，这可能会导致一条条巨长无比的log向你袭来，如果不是为了开发调试，请不要使用高日志等级，这不仅会让问题变得难以排查，还会给服务器造成不必要的压力","SERVER.WARN".yellow());
+    }
     println!("{} -> 服务器将在https://{addr_with_port}上启动~ 注意，是HTTPS而非HTTP!","SERVER.INIT".green());
 
     let tls_config = RustlsConfig::from_pem_file(
