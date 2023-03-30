@@ -1,6 +1,6 @@
 {
-    "_id": "你说的对，但这是mongodb的id，没吊用",
-    "username": "RizPS-Reborn#rzprbusers",
+    "_id": "639aaf2f394ab2cd504c1e57",
+    "username": "RizPS#rzpusers",
     "coin": 0,
     "dot": 604,
     "lastMadeCardId": null,
@@ -621,7 +621,70 @@
         }
     ],
     "myBest": [
-
+        {
+            "trackAssetId": "track.Gleam.Uske.0",
+            "difficultyClassName": "HD",
+            "score": 1009000,
+            "completeRate": 120.00000762939453,
+            "isFullCombo": true,
+            "isClear": true
+        },
+        {
+            "trackAssetId": "track.Gleam.Uske.0",
+            "difficultyClassName": "IN",
+            "score": 1009431,
+            "completeRate": 118.6875228881836,
+            "isFullCombo": false,
+            "isClear": true
+        },
+        {
+            "trackAssetId": "track.PastelLines.RekuMochizuki.0",
+            "difficultyClassName": "EZ",
+            "score": 1002900,
+            "completeRate": 120.00000762939453,
+            "isFullCombo": true,
+            "isClear": true
+        },
+        {
+            "trackAssetId": "track.PastelLines.RekuMochizuki.0",
+            "difficultyClassName": "HD",
+            "score": 997105,
+            "completeRate": 114.98663330078125,
+            "isFullCombo": false,
+            "isClear": true
+        },
+        {
+            "trackAssetId": "track.PastelLines.RekuMochizuki.0",
+            "difficultyClassName": "IN",
+            "score": 1145141,
+            "completeRate": 114.51419198109844,
+            "isFullCombo": true,
+            "isClear": true
+        },
+        {
+            "trackAssetId": "track.PowerAttack.EBIMAYO.0",
+            "difficultyClassName": "HD",
+            "score": 1006546,
+            "completeRate": 116.70571899414062,
+            "isFullCombo": false,
+            "isClear": true
+        },
+        {
+            "trackAssetId": "track.PowerAttack.EBIMAYO.0",
+            "difficultyClassName": "IN",
+            "score": 1011329,
+            "completeRate": 114.67567443847656,
+            "isFullCombo": false,
+            "isClear": true
+        },
+        {
+            "trackAssetId": "track.PowerAttack.EBIMAYO.0",
+            "difficultyClassName": "IN",
+            "score": 1145141,
+            "completeRate": 120.00000762939453,
+            "isFullCombo": true,
+            "isClear": true
+        }
     ],
     "unlockedLevels": [
         "track.RIP.eicateve.0",
