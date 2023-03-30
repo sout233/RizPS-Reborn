@@ -171,6 +171,7 @@ Android：回到Proxydroid，把`Proxy Switch`开关打开
 ## 注意事项
 1. 使用本项目造成的一切法律问题作者既不承担
 2. 若您使用的是iOS并使用共享账号下载Shadowrocket，请注意个人手机安全，不要将账号登进iCloud，只登AppStore然后下载就好了
+3. 如果你打算对RizPS-Reborn进行二次开发，建议使用装了rust插件的IntelliJ IDEA，因为它真的很好用不是吗？
 
 ## 社区
 Discord：https://discord.gg/MJcGm6MxUj

@@ -19,6 +19,12 @@ use openssl::rsa::{Rsa, Padding};
 use colored::Colorize;
 use axum_server::tls_rustls::RustlsConfig;
 use structs::{SDKLogin_JSON};
+use rand::{thread_rng, Rng};
+use rand::distributions::Alphanumeric;
+use std::iter::Iterator;
+use crate::structs::{RZPR_Accounts, RZPR_ACJson};
+
+//一些通用的工具函数
 
 pub fn rsa_private_encrypt(content: &str, private_key: &str) -> String{
     println!("{} -> 准备加密的MD5：{content}","SDKLogin.RSAEncrypt".bright_yellow());
@@ -38,8 +44,31 @@ pub fn aes_encrypt(key: &str, iv: String, data: &str) -> String {
     b64_enc_data
 }
 
-fn string_to_static_str(s: String) -> &'static str {
+pub fn string_to_static_str(s: String) -> &'static str {
     Box::leak(s.into_boxed_str())
+}
+
+pub fn is_user_exists(username: String) -> bool{
+    let accounts: structs::RZPR_ACJson = get_serde_accountfile();
+    if accounts.rzprac_items.iter().any(|item| item.sdklogin_username == username) {
+        true
+    } else {
+        false
+    }
+}
+
+pub fn get_serde_accountfile() -> RZPR_ACJson{
+    let account_json: String = fs::read_to_string("./accounts.rzpr").unwrap();
+    let accounts: structs::RZPR_ACJson = serde_json::from_str(&*account_json).unwrap();
+    accounts
+}
+
+pub fn generate_random_string(length: usize) -> String {
+    thread_rng()
+        .sample_iter(&Alphanumeric)
+        .take(length)
+        .map(char::from)
+        .collect()
 }
 
 //http请求处理函数部分
@@ -131,7 +160,20 @@ async fn InGameErrorReport(Json(errinfo) : Json<serde_json::Value>) -> String{
 async fn GuestLogin_DO() -> String{
     println!("{} -> 客户端正在尝试注册账号","GUESTLOGIN.DO".yellow());
     let timestamp_now : String = (SystemTime::now().duration_since(UNIX_EPOCH)).unwrap().as_secs().to_string();
-    let ret: String = "{\"message\":\"{\\\"timestamp\\\":\\\"".to_string() + &timestamp_now + &"\\\",\\\"sid\\\":\\\"rzpusers\\\",\\\"warnEndDate\\\":null,\\\"token\\\":\\\"我是翟健，我被困在无人的大沙漠里了，我现在需要钱来支撑我出去，V我50，出去后听我讲述我对私服的报仇计划\\\",\\\"cmtBirth\\\":\\\"9\\\",\\\"bind\\\":\\\"9\\\"}\",\"status\":\"1\"}".to_string();
+    let give_new_username: &str = &*generate_random_string(12);
+    let &mut new_user_account_struct = structs::RZPR_Accounts{
+        sdklogin_username: ("用户_" + timestamp_now + "#" + give_new_username).to_string(),
+        sdklogin_coin: 0,
+        sdklogin_dot: 0,
+        sdklogin_lastmadecardid: 0,
+        sdklogin_bests: Vec::from([]),//新用户那必须得空啊
+        sdklogin_uklevels: Vec::from(["track.PastelLines.RekuMochizuki.0".to_string(),"track.Gleam.Uske.0".to_string(),"track.PowerAttack.EBIMAYO.0".to_string()]),//新人三件套
+    };
+    let newacfile = get_serde_accountfile().rzprac_items.append(new_user_account_struct);
+
+    let json = serde_json::to_string(&newacfile).unwrap();
+    fs::write("./accounts.rzpr", json);
+    let ret: String = "{\"message\":\"{\\\"timestamp\\\":\\\"".to_string() + &timestamp_now + &"\\\",\\\"sid\\\":\\\""+ give_new_username + &"\\\",\\\"warnEndDate\\\":null,\\\"token\\\":\\\"我是翟健，我被困在无人的大沙漠里了，我现在需要钱来支撑我出去，V我50，出去后听我讲述我对私服的报仇计划\\\",\\\"cmtBirth\\\":\\\"9\\\",\\\"bind\\\":\\\"9\\\"}\",\"status\":\"1\"}".to_string();
     ret
 }
 
@@ -240,6 +282,14 @@ async fn main() {
     else{
         println!("{} -> 配置文件存在，启动服务器~","SERVER.INIT".green())
     }//配置文件检查
+
+    if(!Path::new("./accounts.rzpr").exists()){
+        println!("{} -> 账号数据文件 (./accounts.rzpr) 不存在，正在尝试创建...","SERVER.INIT".blue());
+        fs::write("./accounts.rzpr", "{{\"sdklogin_username\": \"rzpusers\",\"sdklogin_coin\": 114514,\"sdklogin_dot\": 1919810,\"sdklogin_lastmadecardid\": 0,\"sdklogin_bests\": [],\"sdklogin_uklevels\": [\"track.PastelLines.RekuMochizuki.0\",\"track.Gleam.Uske.0\",\"track.PowerAttack.EBIMAYO.0\"]}}");
+    }
+    else{
+        println!("{} -> 配置文件存在，启动服务器~","SERVER.INIT".green())
+    }//accounts文件检查
     
     //读配置文件
     let server_conf_file = fs::File::open("./config.json").unwrap();
@@ -270,6 +320,7 @@ async fn main() {
         .route("/after_play",any(afterplay))
         .route("/isc", any(get_ios_shadowsocks_conf))
         .route("/test", any(NetWorkTest))
+        .route("/logback",any(logback))//在切屏后返回rizline时请求，不响应游戏会寄
         .route("/testasset/:platform/:file", any(resources_download))
         .route("/songsdata/:platform/cridata_assets_criaddressables/:req_file_no_bundle", any(songs_download))
         .route("/checklive", any(get_test));
