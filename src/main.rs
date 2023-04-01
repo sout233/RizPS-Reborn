@@ -220,10 +220,18 @@ async fn GuestLogin_DO() -> String{
     ret
 }
 
-async fn SDKLogin_DO() -> String{
+async fn SDKLogin_DO(post_body: String) -> String{
     println!("{} -> 客户端正在尝试使用SDK登录","SDKLOGIN.DO".yellow());
-    let timestamp_now : String = (SystemTime::now().duration_since(UNIX_EPOCH)).unwrap().as_secs().to_string();
-    let ret: String = "{\"message\":\"{\\\"timestamp\\\":\\\"".to_string() + &timestamp_now + &"\\\",\\\"warnEndDate\\\":null,\\\"token\\\":\\\"什么，这不是饼干，这是RizPS-Reborn！我们这个RizPS-Reborn体积小方便携带，拆开一包，放水里就变大，怎么扯都扯不坏，用来嫖鸽游，夜袭CN115，惹惹翟健，都是很好用的。你看解压以后比Grasscutter还小，放在水里遇水变大变高，吸水性很强的。解压以后，是一只四肢健全的RizPS-Reborn，你看他怎么擦都擦不坏，好不掉毛不掉絮，使用七八次都没问题，出差旅行带上它非常方便，用它SDKCheckLogin.do，再SDKLogin，AESEncrypt，干净卫生。什么?在哪里买?下方Gayhub，买五包送五包，还包邮 Powered By 矮人科技\\\",\\\"priority\\\":0,\\\"cmtBirth\\\":\\\"9\\\",\\\"bind\\\":\\\"9\\\"}\",\"status\":\"1\"}".to_string();
+    let iter = post_body.split('&');
+    // 把迭代器转换成一个&str类型的向量
+    let postbody_v: Vec<&str> = iter.collect();
+    if(is_user_exists(postbody_v.get(0).unwrap().to_string())) {
+        let timestamp_now: String = (SystemTime::now().duration_since(UNIX_EPOCH)).unwrap().as_secs().to_string();
+        let ret: String = "{\"message\":\"{\\\"timestamp\\\":\\\"".to_string() + &timestamp_now + &"\\\",\\\"warnEndDate\\\":null,\\\"token\\\":\\\"什么，这不是饼干，这是RizPS-Reborn！我们这个RizPS-Reborn体积小方便携带，拆开一包，放水里就变大，怎么扯都扯不坏，用来嫖鸽游，夜袭CN115，惹惹翟健，都是很好用的。你看解压以后比Grasscutter还小，放在水里遇水变大变高，吸水性很强的。解压以后，是一只四肢健全的RizPS-Reborn，你看他怎么擦都擦不坏，好不掉毛不掉絮，使用七八次都没问题，出差旅行带上它非常方便，用它SDKCheckLogin.do，再SDKLogin，AESEncrypt，干净卫生。什么?在哪里买?下方Gayhub，买五包送五包，还包邮 Powered By 矮人科技\\\",\\\"priority\\\":0,\\\"cmtBirth\\\":\\\"9\\\",\\\"bind\\\":\\\"9\\\"}\",\"status\":\"1\"}".to_string();
+    }
+    else{
+        ret = "{\"message\":\"username or password error\",\"status\":\"10001\"}";
+    }
     ret
 }
 
@@ -232,13 +240,14 @@ async fn SDKLogin(Json(post_body) : Json<structs::PostBody_SDKLogin>) -> (Status
     let mut sdklogin_hasher = Md5::new();
     let mut sdklogin_serde = get_serde_basesdklogin();
     let mut ac_serde = get_user_account(get_serde_accountfile(),post_body.username.clone());
+    println!("ac_serde.sdklogin_gamename: {}",ac_serde.sdklogin_gamename);
     sdklogin_serde.username = ac_serde.sdklogin_gamename + "#" + &*ac_serde.sdklogin_username;//读取并设置gamename与username
     sdklogin_serde.coin = ac_serde.sdklogin_coin;
     sdklogin_serde.dot = ac_serde.sdklogin_dot;
     sdklogin_serde.myBest = ac_serde.sdklogin_bests;
     sdklogin_serde.unlockedLevels = ac_serde.sdklogin_uklevels;
     let mut userid_clone: String = post_body.userId.clone();
-    if(is_user_set_gamename( userid_clone.clone())){
+    if(is_user_set_gamename( userid_clone.clone()) && is_user_exists(userid_clone.clone())){
         let origin_text = String::from(serde_json::to_string(&sdklogin_serde).unwrap());
         sdklogin_hasher.input_str(&origin_text);
         let rsa_signed: String = rsa_private_encrypt(sdklogin_hasher.result_str().as_str(), &fs::read_to_string("./RizPS-Reborn-Custom-RSA-Keys/private.pem").unwrap());
@@ -260,7 +269,10 @@ async fn SDKLogin(Json(post_body) : Json<structs::PostBody_SDKLogin>) -> (Status
 async fn SDKRegister(Json(post_body) : Json<structs::PostBody_SDKLogin>) -> (StatusCode,HeaderMap, String){
     println!("{} -> 客户端正在尝试注册游戏账号","SDKREGISTER".yellow());
     if(!is_user_exists( post_body.userId.clone())) {
-        return (StatusCode::BAD_REQUEST, HeaderMap::new(), "这个账号已经被注册，完全可以直接使用/SDKLogin进行请求登录，但客户端扔发送了/SDKRegister请求进行用户重命名与注册，尝试重装游戏？".to_string())
+        return (StatusCode::BAD_REQUEST, HeaderMap::new(), "{\"message\":\"这个账号不存在，可能是因为没过guestLogin.do，尝试重装游戏或更新RizPS-Reborn？\",\"code\":1}".to_string())
+    }
+    if(is_user_set_gamename( post_body.userId.clone())) {
+        return (StatusCode::BAD_REQUEST, HeaderMap::new(), "{\"message\":\"这个账号已经被注册，完全可以直接使用/SDKLogin进行请求登录，但客户端扔发送了/SDKRegister请求进行用户重命名与注册，尝试重装游戏？\",\"code\":1}".to_string())
     }
     change_gamename(get_serde_accountfile(),post_body.userId.clone(),post_body.username.clone());
     let mut sdklogin_hasher = Md5::new();
