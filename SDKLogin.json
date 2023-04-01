@@ -3,7 +3,7 @@
     "username": "RizPS-Reborn#rzprusers",
     "coin": 0,
     "dot": 604,
-    "lastMadeCardId": null,
+    "lastMadeCardId": 0,
     "getProducts": [
         {
             "id": 0,

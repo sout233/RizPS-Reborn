@@ -3,11 +3,11 @@ use serde::{Deserialize, Serialize};
 //SDKLogin客户端POST内容部分structs
 #[derive(Serialize, Deserialize)]
 pub struct PostBody_SDKLogin {
-    userId: String,
-    game: String,
-    channelNo: String,
-    token: String,
-    username: String
+    pub userId: String,
+    pub game: String,
+    pub channelNo: String,
+    pub token: String,
+    pub username: String
 }
 
 ///SDKLogin的json序列化部分structs
@@ -39,6 +39,7 @@ pub struct Asset {
 }
 
 #[derive(Serialize, Deserialize)]
+#[derive(Clone)]
 pub struct MyBest {
     pub trackAssetId: String,
     pub difficultyClassName: String,
@@ -64,8 +65,10 @@ pub struct SDKLogin_JSON {
 //RZPR的accounts json序列化部分
 
 #[derive(Serialize, Deserialize)]
+#[derive(Clone)]
 pub  struct RZPR_Accounts {
     pub sdklogin_username: String,
+    pub sdklogin_gamename: String,
     pub sdklogin_coin: i32,
     pub sdklogin_dot: i32,
     pub sdklogin_lastmadecardid: i32,
@@ -83,6 +86,7 @@ accounts.rzpr示例：
 {
     "rzprac_items": {
         "sdklogin_username": "abc",
+        "sdklogin_gamename": "wait_to_set",
         "sdklogin_coin": 114514,
         "sdklogin_dot": 1919810,
         "sdklogin_lastmadecardid": 0,

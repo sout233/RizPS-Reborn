@@ -1,4 +1,5 @@
 mod structs;
+mod commands;
 
 use axum::{
     routing::any,
@@ -22,7 +23,10 @@ use structs::{SDKLogin_JSON};
 use rand::{thread_rng, Rng};
 use rand::distributions::Alphanumeric;
 use std::iter::Iterator;
-use crate::structs::{RZPR_Accounts, RZPR_ACJson};
+use axum::http::StatusCode;
+use serde_json::Value::Null;
+use crate::commands::{change_gamename, create_a_sdkchecklogindo_account_no_sdklogin};
+use crate::structs::{PostBody_SDKLogin, RZPR_Accounts, RZPR_ACJson};
 
 //一些通用的工具函数
 
@@ -48,11 +52,44 @@ pub fn string_to_static_str(s: String) -> &'static str {
     Box::leak(s.into_boxed_str())
 }
 
+pub fn get_user_account(ac_struct: RZPR_ACJson, username: String) -> RZPR_Accounts {
+    ac_struct.rzprac_items.iter().find(|item| item.sdklogin_username == username).cloned().unwrap_or_else(|| RZPR_Accounts{
+        sdklogin_username: "Not Found This Account".to_string(),
+        sdklogin_gamename: "Not Found".to_string(),
+        sdklogin_coin: 0,
+        sdklogin_dot: 0,
+        sdklogin_lastmadecardid: 0,
+        sdklogin_bests: vec![],
+        sdklogin_uklevels: vec![],
+    })
+}
+
 pub fn is_user_exists(username: String) -> bool{
     let accounts: structs::RZPR_ACJson = get_serde_accountfile();
     if accounts.rzprac_items.iter().any(|item| item.sdklogin_username == username) {
+        if(isLogLevelHigh()){
+            println!("is_user_exists: 用户{}存在",username);
+        }
         true
     } else {
+        if(isLogLevelHigh()){
+            println!("is_user_exists: 用户{}不存在",username);
+        }
+        false
+    }
+}
+
+pub fn is_user_set_gamename(username: String) -> bool{
+    let accounts: structs::RZPR_ACJson = get_serde_accountfile();
+    if (get_user_account(accounts,username.clone()).sdklogin_gamename != "wait_to_set") {
+        if(isLogLevelHigh()){
+            println!("is_user_set_gamename: 用户{}已经设置过gamename了",username);
+        }
+        true
+    } else {
+        if(isLogLevelHigh()){
+            println!("is_user_set_gamename: 用户{}未设置过gamename",username);
+        }
         false
     }
 }
@@ -178,21 +215,7 @@ async fn GuestLogin_DO() -> String{
     println!("{} -> 客户端正在尝试注册账号","GUESTLOGIN.DO".yellow());
     let timestamp_now : String = (SystemTime::now().duration_since(UNIX_EPOCH)).unwrap().as_secs().to_string();
     let give_new_username: &str = &*generate_random_string(12);
-    let mut new_user_account_struct = structs::RZPR_Accounts{
-        sdklogin_username: ("用户_".to_string() + &timestamp_now + "#" + give_new_username).to_string(),
-        sdklogin_coin: 0,
-        sdklogin_dot: 0,
-        sdklogin_lastmadecardid: 0,
-        sdklogin_bests: Vec::from([]),//新用户那必须得空啊
-        sdklogin_uklevels: Vec::from(["track.PastelLines.RekuMochizuki.0".to_string(),"track.Gleam.Uske.0".to_string(),"track.PowerAttack.EBIMAYO.0".to_string()]),//新人三件套
-    };
-    let mut newacfile = get_serde_accountfile();
-    newacfile.rzprac_items.push(new_user_account_struct);
-    let json:String = serde_json::to_string(&newacfile).unwrap();
-    if(isLogLevelHigh()){
-        println!("用户账号注册的反序列化结果：{}",json);
-    }
-    fs::write("./accounts.rzpr", json);
+    create_a_sdkchecklogindo_account_no_sdklogin(give_new_username);
     let ret: String = "{\"message\":\"{\\\"timestamp\\\":\\\"".to_string() + &timestamp_now + &"\\\",\\\"sid\\\":\\\""+ give_new_username + &"\\\",\\\"warnEndDate\\\":null,\\\"token\\\":\\\"我是翟健，我被困在无人的大沙漠里了，我现在需要钱来支撑我出去，V我50，出去后听我讲述我对私服的报仇计划\\\",\\\"cmtBirth\\\":\\\"9\\\",\\\"bind\\\":\\\"9\\\"}\",\"status\":\"1\"}".to_string();
     ret
 }
@@ -204,12 +227,52 @@ async fn SDKLogin_DO() -> String{
     ret
 }
 
-async fn SDKLogin(Json(post_body) : Json<structs::PostBody_SDKLogin>) -> (HeaderMap, String){
+async fn SDKLogin(Json(post_body) : Json<structs::PostBody_SDKLogin>) -> (StatusCode,HeaderMap, String){
     println!("{} -> 客户端正在尝试下载存档数据","SDKLOGIN".yellow());
     let mut sdklogin_hasher = Md5::new();
     let mut sdklogin_serde = get_serde_basesdklogin();
+    let mut ac_serde = get_user_account(get_serde_accountfile(),post_body.username.clone());
+    sdklogin_serde.username = ac_serde.sdklogin_gamename + "#" + &*ac_serde.sdklogin_username;//读取并设置gamename与username
+    sdklogin_serde.coin = ac_serde.sdklogin_coin;
+    sdklogin_serde.dot = ac_serde.sdklogin_dot;
+    sdklogin_serde.myBest = ac_serde.sdklogin_bests;
+    sdklogin_serde.unlockedLevels = ac_serde.sdklogin_uklevels;
+    let mut userid_clone: String = post_body.userId.clone();
+    if(is_user_set_gamename( userid_clone.clone())){
+        let origin_text = String::from(serde_json::to_string(&sdklogin_serde).unwrap());
+        sdklogin_hasher.input_str(&origin_text);
+        let rsa_signed: String = rsa_private_encrypt(sdklogin_hasher.result_str().as_str(), &fs::read_to_string("./RizPS-Reborn-Custom-RSA-Keys/private.pem").unwrap());
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            HeaderName::from_static("sign"),
+            HeaderValue::from_static(string_to_static_str(rsa_signed))
+        );
+        headers.insert(
+            HeaderName::from_static("set-token"),
+            HeaderValue::from_str(userid_clone.as_str()).unwrap()
+        );
+        return (StatusCode::OK,headers, aes_encrypt("Sv@H,+SV-U*VEjCW,n7WA-@n}j3;U;XF", "1%[OB.<YSw?)o:rQ".to_string(), fs::read_to_string("./SDKLogin.json").unwrap().as_str()))
+    }
+    let mut headers = HeaderMap::new();
+    return (StatusCode::NOT_FOUND,headers, "{\"message\":\"该用户尚未注册\",\"code\":1}".to_string())
+}
 
-    let origin_text = String::from(fs::read_to_string("./SDKLogin.json").unwrap());
+async fn SDKRegister(Json(post_body) : Json<structs::PostBody_SDKLogin>) -> (StatusCode,HeaderMap, String){
+    println!("{} -> 客户端正在尝试注册游戏账号","SDKREGISTER".yellow());
+    if(!is_user_exists( post_body.userId.clone())) {
+        return (StatusCode::BAD_REQUEST, HeaderMap::new(), "这个账号已经被注册，完全可以直接使用/SDKLogin进行请求登录，但客户端扔发送了/SDKRegister请求进行用户重命名与注册，尝试重装游戏？".to_string())
+    }
+    change_gamename(get_serde_accountfile(),post_body.userId.clone(),post_body.username.clone());
+    let mut sdklogin_hasher = Md5::new();
+    let mut sdklogin_serde: SDKLogin_JSON = get_serde_basesdklogin();
+    let mut ac_serde = get_user_account(get_serde_accountfile(),post_body.username.clone());
+    sdklogin_serde.username = ac_serde.sdklogin_gamename + "#" + &*ac_serde.sdklogin_username;//读取并设置gamename与username
+    sdklogin_serde.coin = ac_serde.sdklogin_coin;
+    sdklogin_serde.dot = ac_serde.sdklogin_dot;
+    sdklogin_serde.myBest = ac_serde.sdklogin_bests;
+    sdklogin_serde.unlockedLevels = ac_serde.sdklogin_uklevels;
+    let userid_clone = post_body.userId;
+    let origin_text = String::from(serde_json::to_string(&sdklogin_serde).unwrap());
     sdklogin_hasher.input_str(&origin_text);
     let rsa_signed: String = rsa_private_encrypt(sdklogin_hasher.result_str().as_str(), &fs::read_to_string("./RizPS-Reborn-Custom-RSA-Keys/private.pem").unwrap());
     let mut headers = HeaderMap::new();
@@ -217,7 +280,11 @@ async fn SDKLogin(Json(post_body) : Json<structs::PostBody_SDKLogin>) -> (Header
         HeaderName::from_static("sign"),
         HeaderValue::from_static(string_to_static_str(rsa_signed))
     );
-    (headers, aes_encrypt("Sv@H,+SV-U*VEjCW,n7WA-@n}j3;U;XF", "1%[OB.<YSw?)o:rQ".to_string(), fs::read_to_string("./SDKLogin.json").unwrap().as_str()))
+    headers.insert(
+        HeaderName::from_static("set-token"),
+        HeaderValue::from_str(userid_clone.as_str()).unwrap()
+    );
+    return (StatusCode::OK,headers, aes_encrypt("Sv@H,+SV-U*VEjCW,n7WA-@n}j3;U;XF", "1%[OB.<YSw?)o:rQ".to_string(), fs::read_to_string("./SDKLogin.json").unwrap().as_str()))
 }
 
 async fn afterplay() -> (HeaderMap, String){
@@ -307,7 +374,7 @@ async fn main() {
 
     if(!Path::new("./accounts.rzpr").exists()){
         println!("{} -> 账号数据文件 (./accounts.rzpr) 不存在，正在尝试创建...","SERVER.INIT".blue());
-        fs::write("./accounts.rzpr", "{\"rzprac_items\": [{\"sdklogin_username\": \"rzpusers\",\"sdklogin_coin\": 114514,\"sdklogin_dot\": 1919810,\"sdklogin_lastmadecardid\": 0,\"sdklogin_bests\": [],\"sdklogin_uklevels\": [\"track.PastelLines.RekuMochizuki.0\",\"track.Gleam.Uske.0\",\"track.PowerAttack.EBIMAYO.0\"]}]}");
+        fs::write("./accounts.rzpr", "{\"rzprac_items\": [{\"sdklogin_username\": \"rzpusers\",\"sdklogin_gamename\": \"通用账号\",\"sdklogin_coin\": 114514,\"sdklogin_dot\": 1919810,\"sdklogin_lastmadecardid\": 0,\"sdklogin_bests\": [],\"sdklogin_uklevels\": [\"track.PastelLines.RekuMochizuki.0\",\"track.Gleam.Uske.0\",\"track.PowerAttack.EBIMAYO.0\"]}]}");
     }
     else{
         println!("{} -> 配置文件存在，启动服务器~","SERVER.INIT".green())
@@ -339,10 +406,11 @@ async fn main() {
         .route("/login/guestLogin.do", any(GuestLogin_DO))
         .route("/login/sdkCheckLogin.do", any(SDKLogin_DO))
         .route("/SDKLogin", any(SDKLogin))
+        .route("/SDKRegister", any(SDKRegister))
         .route("/after_play",any(afterplay))
         .route("/isc", any(get_ios_shadowsocks_conf))
         .route("/test", any(NetWorkTest))
-        .route("/logback",any(logback))//在切屏后返回rizline时请求，不响应游戏会寄
+        .route("/logBack",any(logback))//在切屏后返回rizline时请求，不响应游戏会寄
         .route("/testasset/:platform/:file", any(resources_download))
         .route("/songsdata/:platform/cridata_assets_criaddressables/:req_file_no_bundle", any(songs_download))
         .route("/checklive", any(get_test));

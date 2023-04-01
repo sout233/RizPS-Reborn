@@ -53,6 +53,8 @@ $env:OPENSSL_DIR="C:\Program Files\OpenSSL-Win64"
 
 `cargo run`
 
+我是warnings之神，52warnings不急，不理睬就没事.jpg
+
 ## 2.开启Fiddler Classic代理并在手机上连接与信任证书
 
 从[官网](https://www.telerik.com/fiddler/fiddler-classic)下载并安装Fiddler Classic
