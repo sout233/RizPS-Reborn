@@ -25,8 +25,8 @@ use rand::distributions::Alphanumeric;
 use std::iter::Iterator;
 use axum::http::StatusCode;
 use serde_json::Value::Null;
-use crate::commands::{change_gamename, create_a_sdkchecklogindo_account_no_sdklogin};
-use crate::structs::{PostBody_SDKLogin, RZPR_Accounts, RZPR_ACJson};
+use crate::commands::{change_gamename, create_a_sdkchecklogindo_account_no_sdklogin, write_play_song_source};
+use crate::structs::{AfterPlay_JSON, PostBody_SDKLogin, RZPR_Accounts, RZPR_ACJson};
 
 //一些通用的工具函数
 
@@ -235,7 +235,7 @@ async fn SDKLogin_DO(post_body: String) -> String{
     // 把迭代器转换成一个&str类型的向量
     let postbody_v: Vec<&str> = iter.collect();
     let mut ret: String = "".to_string();
-    if(is_user_exists(postbody_v.get(0).unwrap().to_string())) {
+    if(is_user_exists(postbody_v.get(1).unwrap().to_string().replace("sid=",""))) {
         let timestamp_now: String = (SystemTime::now().duration_since(UNIX_EPOCH)).unwrap().as_secs().to_string();
         ret = "{\"message\":\"{\\\"timestamp\\\":\\\"".to_string() + &timestamp_now + &"\\\",\\\"warnEndDate\\\":null,\\\"token\\\":\\\"什么，这不是饼干，这是RizPS-Reborn！我们这个RizPS-Reborn体积小方便携带，拆开一包，放水里就变大，怎么扯都扯不坏，用来嫖鸽游，夜袭CN115，惹惹翟健，都是很好用的。你看解压以后比Grasscutter还小，放在水里遇水变大变高，吸水性很强的。解压以后，是一只四肢健全的RizPS-Reborn，你看他怎么擦都擦不坏，好不掉毛不掉絮，使用七八次都没问题，出差旅行带上它非常方便，用它SDKCheckLogin.do，再SDKLogin，AESEncrypt，干净卫生。什么?在哪里买?下方Gayhub，买五包送五包，还包邮 Powered By 矮人科技\\\",\\\"priority\\\":0,\\\"cmtBirth\\\":\\\"9\\\",\\\"bind\\\":\\\"9\\\"}\",\"status\":\"1\"}".to_string();
     }
@@ -309,8 +309,13 @@ async fn SDKRegister(Json(post_body) : Json<structs::PostBody_SDKLogin>) -> (Sta
     return (StatusCode::OK,headers, aes_encrypt("Sv@H,+SV-U*VEjCW,n7WA-@n}j3;U;XF", "1%[OB.<YSw?)o:rQ".to_string(), serde_json::to_string(&sdklogin_serde).unwrap().as_str()))
 }
 
-async fn afterplay() -> (HeaderMap, String){
+async fn afterplay(client_headers: HeaderMap, Json(post_body) : Json<AfterPlay_JSON>) -> (HeaderMap, String){
     println!("{} -> 客户端打完了一首歌","AFTER.PLAY".yellow());
+    if(isLogLevelHigh()){
+        let agent = client_headers.get("token").unwrap().to_str().unwrap();
+        println!("client_headers.token: {}",agent);
+    }
+    write_play_song_source(post_body.trackAssetId,post_body.difficultyClassName,post_body.score,post_body.completeRate,post_body.bad,post_body.miss,client_headers.get("token").unwrap().to_str().unwrap().to_string(),get_serde_accountfile());
     let mut sdklogin_hasher = Md5::new();
     let origin_text = String::from("{\"data\": \"idk\"}");
     sdklogin_hasher.input_str(&origin_text);

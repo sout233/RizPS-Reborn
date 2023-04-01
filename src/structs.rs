@@ -43,8 +43,8 @@ pub struct Asset {
 pub struct MyBest {
     pub trackAssetId: String,
     pub difficultyClassName: String,
-    pub score: i128,
-    pub completeRate: f64,
+    pub score: u32,
+    pub completeRate: f32,
     pub isFullCombo: bool,
     pub isClear: bool
 }
@@ -60,6 +60,24 @@ pub struct SDKLogin_JSON {
     pub myBest: Vec<MyBest>,
     pub unlockedLevels: Vec<String>,
     pub appearLevels: Vec<String>
+}
+
+//游戏内部分功能POST
+
+#[derive(Serialize, Deserialize)]
+pub struct AfterPlay_JSON {
+    pub trackAssetId: String,
+    pub difficultyClassName: String,
+    pub score: u32,
+    pub completeRate: f32,
+    pub maxPerfect: u32,
+    pub perfect: u32,
+    pub miss: u32,
+    pub bad: u32,
+    pub early: u32,
+    pub late: u32,
+    pub comboScore: u32,
+    pub leftHp: f32,
 }
 
 //RZPR的accounts json序列化部分

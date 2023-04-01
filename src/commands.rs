@@ -1,5 +1,5 @@
-use crate::{get_user_account, structs};
-use crate::structs::{RZPR_Accounts, RZPR_ACJson};
+use crate::{get_user_account, isLogLevelHigh, structs};
+use crate::structs::{MyBest, RZPR_Accounts, RZPR_ACJson};
 use std::fs;
 
 pub fn create_a_sdkchecklogindo_account_no_sdklogin(new_username: &str) -> bool{
@@ -49,6 +49,55 @@ pub fn change_gamename(mut acjson: RZPR_ACJson, target_username: String, new_gam
         newacfile.rzprac_items.remove(index);
         newacfile.rzprac_items.push(new_account_struct.to_owned());
         let json:String = serde_json::to_string(&newacfile).unwrap();
+        fs::write("./accounts.rzpr", json);
+        return true
+    }
+    else{
+        return false
+    }
+}
+
+pub fn isClear(completerate:f32) -> bool{
+    if(completerate >= 100 as f32) {
+        true
+    }else{
+        false
+    }
+}
+
+pub fn isFullCombo(bad: u32,miss: u32) -> bool{
+    if(bad == 0 && miss == 0){
+        true
+    }
+    else{
+        false
+    }
+}
+
+pub fn write_play_song_source(trackAssetId: String, difficultyClassName: String, score: u32, completeRate: f32, bad: u32, miss: u32, target_username: String, mut acjson: RZPR_ACJson) -> bool{
+    if(isLogLevelHigh()){
+        println!("正在写入成绩");
+    }
+    let new_need_push_mybest_struct: MyBest = MyBest{
+        trackAssetId,
+        difficultyClassName,
+        score: score,
+        completeRate: completeRate,
+        isFullCombo: isFullCombo(bad,miss),
+        isClear: isClear(completeRate),
+    };
+    if let Some(rzpr_account) = acjson.rzprac_items.iter().find(|rzpr_account| rzpr_account.sdklogin_username == target_username) {
+        let mut old_account_struct_with_old_gamename = rzpr_account.to_owned();
+        let mut new_account_struct = rzpr_account.to_owned();
+        new_account_struct.sdklogin_bests.push(new_need_push_mybest_struct);
+        let mut newacfile = crate::get_serde_accountfile();
+        let (index, _) = acjson.rzprac_items.clone().iter().enumerate().find(|(_, x)| *x.sdklogin_username == target_username).unwrap(); //找到旧的rzpr_accounts的索引
+        newacfile.rzprac_items.remove(index);
+        newacfile.rzprac_items.push(new_account_struct.to_owned());
+        let json:String = serde_json::to_string(&newacfile).unwrap();
+        if(isLogLevelHigh()){
+            println!("正在写入json");
+        }
         fs::write("./accounts.rzpr", json);
         return true
     }
