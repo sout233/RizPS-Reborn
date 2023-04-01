@@ -40,9 +40,15 @@ pub fn create_a_sdklogin_account(new_username: &str, new_gamename: &str) -> bool
 }
 
 pub fn change_gamename(mut acjson: RZPR_ACJson, target_username: String, new_gamename: String) -> bool{
-    if let Some(rzpr_account) = acjson.rzprac_items.iter_mut().find(|rzpr_account| rzpr_account.sdklogin_username == target_username) {//iter_mut可以让其变得能够被修改
-        rzpr_account.sdklogin_gamename = new_gamename.to_string();
-        let json:String = serde_json::to_string(rzpr_account).unwrap();
+    if let Some(rzpr_account) = acjson.rzprac_items.iter().find(|rzpr_account| rzpr_account.sdklogin_username == target_username) {//iter_mut可以让其变得能够被修改
+        let mut old_account_struct_with_old_gamename = rzpr_account.to_owned();
+        let mut new_account_struct = rzpr_account.to_owned();
+        new_account_struct.sdklogin_gamename = new_gamename.to_string();
+        let mut newacfile = crate::get_serde_accountfile();
+        let (index, _) = acjson.rzprac_items.clone().iter().enumerate().find(|(_, x)| *x.sdklogin_username == target_username).unwrap(); //找到旧的rzpr_accounts的索引
+        newacfile.rzprac_items.remove(index);
+        newacfile.rzprac_items.push(new_account_struct.to_owned());
+        let json:String = serde_json::to_string(&newacfile).unwrap();
         fs::write("./accounts.rzpr", json);
         return true
     }

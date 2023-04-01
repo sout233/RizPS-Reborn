@@ -39,7 +39,7 @@ pub struct Asset {
 }
 
 #[derive(Serialize, Deserialize)]
-#[derive(Clone)]
+#[derive(Clone,PartialEq)]
 pub struct MyBest {
     pub trackAssetId: String,
     pub difficultyClassName: String,
@@ -65,7 +65,7 @@ pub struct SDKLogin_JSON {
 //RZPR的accounts json序列化部分
 
 #[derive(Serialize, Deserialize)]
-#[derive(Clone)]
+#[derive(Clone,PartialEq)]
 pub  struct RZPR_Accounts {
     pub sdklogin_username: String,
     pub sdklogin_gamename: String,

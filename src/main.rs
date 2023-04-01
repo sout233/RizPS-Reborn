@@ -53,15 +53,24 @@ pub fn string_to_static_str(s: String) -> &'static str {
 }
 
 pub fn get_user_account(ac_struct: RZPR_ACJson, username: String) -> RZPR_Accounts {
-    ac_struct.rzprac_items.iter().find(|item| item.sdklogin_username == username).cloned().unwrap_or_else(|| RZPR_Accounts{
-        sdklogin_username: "Not Found This Account".to_string(),
+    println!("get_user_account: username={}",username.clone());
+    // 遍历rzpr_ac_json中的rzprac_items向量
+    for rzpr_account in &ac_struct.rzprac_items {
+        // 检查每个rzpr_account的sdklogin_username是否等于123
+        if rzpr_account.sdklogin_username == username {
+            // 如果找到了，就把它赋值给result，并跳出循环
+            return rzpr_account.clone();
+        }
+    }
+    return RZPR_Accounts{
+        sdklogin_username: "Not Found".to_string(),
         sdklogin_gamename: "Not Found".to_string(),
         sdklogin_coin: 0,
         sdklogin_dot: 0,
         sdklogin_lastmadecardid: 0,
         sdklogin_bests: vec![],
         sdklogin_uklevels: vec![],
-    })
+    }
 }
 
 pub fn is_user_exists(username: String) -> bool{
@@ -225,12 +234,13 @@ async fn SDKLogin_DO(post_body: String) -> String{
     let iter = post_body.split('&');
     // 把迭代器转换成一个&str类型的向量
     let postbody_v: Vec<&str> = iter.collect();
+    let mut ret: String = "".to_string();
     if(is_user_exists(postbody_v.get(0).unwrap().to_string())) {
         let timestamp_now: String = (SystemTime::now().duration_since(UNIX_EPOCH)).unwrap().as_secs().to_string();
-        let ret: String = "{\"message\":\"{\\\"timestamp\\\":\\\"".to_string() + &timestamp_now + &"\\\",\\\"warnEndDate\\\":null,\\\"token\\\":\\\"什么，这不是饼干，这是RizPS-Reborn！我们这个RizPS-Reborn体积小方便携带，拆开一包，放水里就变大，怎么扯都扯不坏，用来嫖鸽游，夜袭CN115，惹惹翟健，都是很好用的。你看解压以后比Grasscutter还小，放在水里遇水变大变高，吸水性很强的。解压以后，是一只四肢健全的RizPS-Reborn，你看他怎么擦都擦不坏，好不掉毛不掉絮，使用七八次都没问题，出差旅行带上它非常方便，用它SDKCheckLogin.do，再SDKLogin，AESEncrypt，干净卫生。什么?在哪里买?下方Gayhub，买五包送五包，还包邮 Powered By 矮人科技\\\",\\\"priority\\\":0,\\\"cmtBirth\\\":\\\"9\\\",\\\"bind\\\":\\\"9\\\"}\",\"status\":\"1\"}".to_string();
+        ret = "{\"message\":\"{\\\"timestamp\\\":\\\"".to_string() + &timestamp_now + &"\\\",\\\"warnEndDate\\\":null,\\\"token\\\":\\\"什么，这不是饼干，这是RizPS-Reborn！我们这个RizPS-Reborn体积小方便携带，拆开一包，放水里就变大，怎么扯都扯不坏，用来嫖鸽游，夜袭CN115，惹惹翟健，都是很好用的。你看解压以后比Grasscutter还小，放在水里遇水变大变高，吸水性很强的。解压以后，是一只四肢健全的RizPS-Reborn，你看他怎么擦都擦不坏，好不掉毛不掉絮，使用七八次都没问题，出差旅行带上它非常方便，用它SDKCheckLogin.do，再SDKLogin，AESEncrypt，干净卫生。什么?在哪里买?下方Gayhub，买五包送五包，还包邮 Powered By 矮人科技\\\",\\\"priority\\\":0,\\\"cmtBirth\\\":\\\"9\\\",\\\"bind\\\":\\\"9\\\"}\",\"status\":\"1\"}".to_string();
     }
     else{
-        ret = "{\"message\":\"username or password error\",\"status\":\"10001\"}";
+        ret = "{\"message\":\"username or password error\",\"status\":\"10001\"}".to_string();
     }
     ret
 }
@@ -239,7 +249,7 @@ async fn SDKLogin(Json(post_body) : Json<structs::PostBody_SDKLogin>) -> (Status
     println!("{} -> 客户端正在尝试下载存档数据","SDKLOGIN".yellow());
     let mut sdklogin_hasher = Md5::new();
     let mut sdklogin_serde = get_serde_basesdklogin();
-    let mut ac_serde = get_user_account(get_serde_accountfile(),post_body.username.clone());
+    let mut ac_serde = get_user_account(get_serde_accountfile(),post_body.userId.clone());
     println!("ac_serde.sdklogin_gamename: {}",ac_serde.sdklogin_gamename);
     sdklogin_serde.username = ac_serde.sdklogin_gamename + "#" + &*ac_serde.sdklogin_username;//读取并设置gamename与username
     sdklogin_serde.coin = ac_serde.sdklogin_coin;
@@ -260,7 +270,7 @@ async fn SDKLogin(Json(post_body) : Json<structs::PostBody_SDKLogin>) -> (Status
             HeaderName::from_static("set-token"),
             HeaderValue::from_str(userid_clone.as_str()).unwrap()
         );
-        return (StatusCode::OK,headers, aes_encrypt("Sv@H,+SV-U*VEjCW,n7WA-@n}j3;U;XF", "1%[OB.<YSw?)o:rQ".to_string(), fs::read_to_string("./SDKLogin.json").unwrap().as_str()))
+        return (StatusCode::OK,headers, aes_encrypt("Sv@H,+SV-U*VEjCW,n7WA-@n}j3;U;XF", "1%[OB.<YSw?)o:rQ".to_string(), serde_json::to_string(&sdklogin_serde).unwrap().as_str()))
     }
     let mut headers = HeaderMap::new();
     return (StatusCode::NOT_FOUND,headers, "{\"message\":\"该用户尚未注册\",\"code\":1}".to_string())
@@ -277,7 +287,7 @@ async fn SDKRegister(Json(post_body) : Json<structs::PostBody_SDKLogin>) -> (Sta
     change_gamename(get_serde_accountfile(),post_body.userId.clone(),post_body.username.clone());
     let mut sdklogin_hasher = Md5::new();
     let mut sdklogin_serde: SDKLogin_JSON = get_serde_basesdklogin();
-    let mut ac_serde = get_user_account(get_serde_accountfile(),post_body.username.clone());
+    let mut ac_serde = get_user_account(get_serde_accountfile(),post_body.userId.clone());
     sdklogin_serde.username = ac_serde.sdklogin_gamename + "#" + &*ac_serde.sdklogin_username;//读取并设置gamename与username
     sdklogin_serde.coin = ac_serde.sdklogin_coin;
     sdklogin_serde.dot = ac_serde.sdklogin_dot;
@@ -296,7 +306,7 @@ async fn SDKRegister(Json(post_body) : Json<structs::PostBody_SDKLogin>) -> (Sta
         HeaderName::from_static("set-token"),
         HeaderValue::from_str(userid_clone.as_str()).unwrap()
     );
-    return (StatusCode::OK,headers, aes_encrypt("Sv@H,+SV-U*VEjCW,n7WA-@n}j3;U;XF", "1%[OB.<YSw?)o:rQ".to_string(), fs::read_to_string("./SDKLogin.json").unwrap().as_str()))
+    return (StatusCode::OK,headers, aes_encrypt("Sv@H,+SV-U*VEjCW,n7WA-@n}j3;U;XF", "1%[OB.<YSw?)o:rQ".to_string(), serde_json::to_string(&sdklogin_serde).unwrap().as_str()))
 }
 
 async fn afterplay() -> (HeaderMap, String){
