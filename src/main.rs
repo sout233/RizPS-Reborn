@@ -1,5 +1,6 @@
 mod structs;
 mod commands;
+mod web_panel;
 
 use axum::{
     routing::any,
@@ -16,6 +17,7 @@ use crypto::{
     md5::Md5,
     digest::Digest
 };
+use std::thread;
 use openssl::rsa::{Rsa, Padding};
 use colored::Colorize;
 use axum_server::tls_rustls::RustlsConfig;
@@ -27,6 +29,8 @@ use axum::http::StatusCode;
 use serde_json::Value::Null;
 use crate::commands::{change_gamename, create_a_sdkchecklogindo_account_no_sdklogin, write_play_song_source};
 use crate::structs::{AfterPlay_JSON, PostBody_SDKLogin, RZPR_Accounts, RZPR_ACJson};
+use crate::web_panel::start_webpanel;
+use tokio::runtime::Runtime;
 
 //一些通用的工具函数
 
@@ -393,7 +397,7 @@ async fn main() {
 
     if(!Path::new("./config.json").exists()){
         println!("{} -> 配置文件 (./config.json) 不存在，正在尝试创建...","SERVER.INIT".blue());
-        fs::write("./config.json", "{\"server\": {\"ip\": \"0.0.0.0\",\"port\": \"443\",\"web_panel\":\"true\",\"web_panel_ip\":\"0.0.0.0\",\"web_panel_port\":\"1275\"},\"output\": {\"loglevel\": \"0\"}}");
+        fs::write("./config.json", "{\"server\": {\"ip\": \"0.0.0.0\",\"port\": \"443\"},\"output\": {\"loglevel\": \"1\"},\"webpanel\":  {\"web_panel\":\"true\",\"web_panel_ip\":\"0.0.0.0\",\"web_panel_port\":\"1275\",\"webpanel_password\": \"1234\"}}");
     }
     else{
         println!("{} -> 配置文件存在，启动服务器~","SERVER.INIT".green())
@@ -404,7 +408,7 @@ async fn main() {
         fs::write("./accounts.rzpr", "{\"rzprac_items\": [{\"sdklogin_username\": \"rzpusers\",\"sdklogin_gamename\": \"通用账号\",\"sdklogin_coin\": 114514,\"sdklogin_dot\": 1919810,\"sdklogin_lastmadecardid\": 0,\"sdklogin_bests\": [],\"sdklogin_uklevels\": [\"track.PastelLines.RekuMochizuki.0\",\"track.Gleam.Uske.0\",\"track.PowerAttack.EBIMAYO.0\"]}]}");
     }
     else{
-        println!("{} -> 配置文件存在，启动服务器~","SERVER.INIT".green())
+        println!("{} -> 账号数据文件存在，继续~","SERVER.INIT".green())
     }//accounts文件检查
     
     //读配置文件
@@ -467,6 +471,18 @@ async fn main() {
     )
     .await
     .unwrap();//配置证书相关 如果证书没了可以这样生成：openssl req -x509 -newkey rsa:4096 -sha256 -nodes -keyout key.pem -out cert.pem -days 114514 前提是你有openssl
+
+    let rt = Runtime::new().unwrap();//webui的runtime
+
+    if(server_conf["webpanel"]["web_panel"].to_string().replace("\"", "") == "true") {
+        let webui_server_thread = thread::spawn(move || {
+            rt.block_on(async{
+                let server_conf_file = fs::File::open("./config.json").unwrap();
+                let server_conf: serde_json::Value = serde_json::from_reader(server_conf_file).unwrap();//由于到了多线程，所以重读+序列化配置文件
+                start_webpanel(server_conf["webpanel"]["web_panel_ip"].to_string().replace("\"", ""), server_conf["webpanel"]["web_panel_port"].to_string().replace("\"", "")).await;
+            });
+        });
+    }
 
     //开服
     axum_server::bind_rustls(addr_with_port.parse().unwrap(), tls_config)
