@@ -20,6 +20,9 @@ pub async fn start_webpanel(listen_ip: String,listen_port: String) {
         .route("/panel/js/:token",any(get_panel_js))
         .route("/indexjs.js", any(get_root_js))
         .route("/shutdown_rizps/:token",any(shutdownrzpr))
+        .route("/get_username_list/:token",any(get_username_list))
+        .route("/aclist/:token",any(get_aclist_html))
+        .route("/aclist/js/:token",any(get_aclist_js))
         .route("/", any(get_root));
 
     let tls_config = RustlsConfig::from_pem_file(
@@ -31,6 +34,22 @@ pub async fn start_webpanel(listen_ip: String,listen_port: String) {
         .serve(app.into_make_service())
         .await
         .unwrap();
+}
+
+async fn get_username_list(axum::extract::Path(down_url): axum::extract::Path<HashMap<String,String>>) -> String{
+    unsafe {
+        if(ALLOW_TOKENS.contains(down_url.get("token").unwrap())){
+            let ac_serde = crate::get_serde_accountfile();
+            let mut ret = "".to_string();
+            for i in ac_serde.rzprac_items {
+                ret = ret + &*i.sdklogin_username + ">^<";
+            }
+            ret
+        }
+        else{
+            "Token ERROR".to_string()
+        }
+    }
 }
 
 async fn get_root() -> (HeaderMap, String){
@@ -61,6 +80,36 @@ async fn get_root_js() -> (HeaderMap, String){
         HeaderValue::from_static("text/javascript")
     );
     (headers,std::fs::read_to_string("www/indexjs.js").unwrap())
+}
+
+async fn get_aclist_js(axum::extract::Path(down_url): axum::extract::Path<HashMap<String,String>>) -> (HeaderMap, String){
+    unsafe {
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            HeaderName::from_static("content-type"),
+            HeaderValue::from_static("text/javascript")
+        );
+        if (ALLOW_TOKENS.contains(down_url.get("token").unwrap())) {
+            return (headers,std::fs::read_to_string("www/accountlistjs.js").unwrap())
+        } else {
+            (headers,"Token ERROR".to_string())
+        }
+    }
+}
+
+async fn get_aclist_html(axum::extract::Path(down_url): axum::extract::Path<HashMap<String,String>>) -> (HeaderMap, String){
+    unsafe {
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            HeaderName::from_static("content-type"),
+            HeaderValue::from_static("text/html")
+        );
+        if (ALLOW_TOKENS.contains(down_url.get("token").unwrap())) {
+            return (headers,std::fs::read_to_string("www/accountlist.html").unwrap())
+        } else {
+            (headers,"Token ERROR".to_string())
+        }
+    }
 }
 
 async fn get_panel_html(axum::extract::Path(down_url): axum::extract::Path<HashMap<String,String>>) -> (HeaderMap, String){

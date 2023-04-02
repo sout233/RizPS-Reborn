@@ -658,7 +658,7 @@
         "track.LEONIDS.SaMZIngTitanChaos.0",
         "track.LINKLINS.Halv.0"
     ],
-    "appearLevels": [        
+    "appearLevels": [
         "track.RIP.eicateve.0",
         "track.Empire.416.0",
         "track.DropDown.Cosmograph.0",
@@ -691,6 +691,11 @@
         "track.Bamboo.rissyuu.0",
         "track.FORTALiCE.ZxNX.0",
         "track.LEONIDS.SaMZIngTitanChaos.0",
-        "track.LINKLINS.Halv.0"
+        "track.LINKLINS.Halv.0",
+        "track.TheLastPage.ARForest.0",
+        "track.AbsolutionPulse.nm.0",
+        "track.ColorfulFlavor.Cansol.0",
+        "track.RuleTheWorld.VauBoy.0",
+        "track.SuperUniverseKnighthoodRemix.Knighthood.0"
     ]
 }

@@ -6,3 +6,16 @@ function std_rzpr(){
         alert("停止请求已发送")
     }
 }
+
+function open_account_list_page(){
+    var httpRequeste = new XMLHttpRequest();
+    httpRequeste.open("GET","/aclist/" + document.getElementById("token_div").textContent,true);
+    httpRequeste.send();
+    httpRequeste.onreadystatechange = ()=>{
+        if(httpRequeste.readyState == 4 && httpRequeste.status == 200){
+            data = httpRequeste.responseText
+            document.getElementById("panelMain").innerHTML = ""
+            document.write(httpRequeste.responseText + "<script src=\"" + "/aclist/js/" + document.getElementById("token_div").textContent + "\"></script>")
+        }
+    }
+}
