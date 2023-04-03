@@ -23,6 +23,7 @@ pub async fn start_webpanel(listen_ip: String,listen_port: String) {
         .route("/get_username_list/:token",any(get_username_list))
         .route("/aclist/:token",any(get_aclist_html))
         .route("/aclist/js/:token",any(get_aclist_js))
+        .route("/ac_deatil/:username/:token",any(get_user_deatil))
         .route("/", any(get_root));
 
     let tls_config = RustlsConfig::from_pem_file(
@@ -34,6 +35,27 @@ pub async fn start_webpanel(listen_ip: String,listen_port: String) {
         .serve(app.into_make_service())
         .await
         .unwrap();
+}
+
+async fn get_user_deatil(axum::extract::Path(down_url): axum::extract::Path<HashMap<String,String>>) -> (HeaderMap,String){
+    unsafe {
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            HeaderName::from_static("content-type"),
+            HeaderValue::from_static("text/html")
+        );
+        if(ALLOW_TOKENS.contains(down_url.get("token").unwrap())){
+            let ac = crate::get_user_account(crate::get_serde_accountfile(),down_url.get("username").unwrap().to_owned());
+            let mut ret: String = ("<head><meta charset=\"utf-8\"><title>Account Deatil - RizPS-Reborn Control Panel</title></head><h1>账号信息</h1><h3>用户名：</h3>".to_string() + &*ac.sdklogin_username + &*"<h3>用户游戏内名称：</h3>".to_string() + &*ac.sdklogin_gamename + &*"<h3>用户Coin数量：</h3>".to_string() + &*ac.sdklogin_coin.to_string() + &*"<h3>用户dot数量：</h3>".to_string() + &*ac.sdklogin_dot.to_string() + &*"<h3>用户已解锁关卡：</h3>".to_string()).to_string();
+            for i in ac.sdklogin_uklevels{
+                ret = ret + &*i.to_string() + "<br/>";
+            }
+            (headers,ret)
+        }
+        else{
+            (headers,"Token ERROR".to_string())
+        }
+    }
 }
 
 async fn get_username_list(axum::extract::Path(down_url): axum::extract::Path<HashMap<String,String>>) -> String{
