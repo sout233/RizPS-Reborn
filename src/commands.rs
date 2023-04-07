@@ -65,7 +65,7 @@ pub fn isClear(completerate:f32) -> bool{
     }
 }
 
-pub fn isFullCombo(bad: u32,miss: u32) -> bool{
+pub fn isFullCombo(bad: u32,miss: i32) -> bool{
     if(bad == 0 && miss == 0){
         true
     }
@@ -74,7 +74,7 @@ pub fn isFullCombo(bad: u32,miss: u32) -> bool{
     }
 }
 
-pub fn write_play_song_source(trackAssetId: String, difficultyClassName: String, score: u32, completeRate: f32, bad: u32, miss: u32, target_username: String, mut acjson: RZPR_ACJson) -> bool{
+pub fn write_play_song_source(trackAssetId: String, difficultyClassName: String, score: u32, completeRate: f32, bad: u32, miss: i32, target_username: String, mut acjson: RZPR_ACJson) -> bool{
     if(isLogLevelHigh()){
         println!("正在写入成绩");
     }

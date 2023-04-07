@@ -321,7 +321,7 @@ async fn afterplay(client_headers: HeaderMap, Json(post_body) : Json<AfterPlay_J
     }
     write_play_song_source(post_body.trackAssetId,post_body.difficultyClassName,post_body.score,post_body.completeRate,post_body.bad,post_body.miss,client_headers.get("token").unwrap().to_str().unwrap().to_string(),get_serde_accountfile());
     let mut sdklogin_hasher = Md5::new();
-    let origin_text = String::from("{\"data\": \"idk\"}");
+    let origin_text = String::from("{\"newDot\"999,\"deltaDot\": 999,\"dropedItems\":[],\"dropedLevels\":[]}");
     sdklogin_hasher.input_str(&origin_text);
     let rsa_signed: String = rsa_private_encrypt(sdklogin_hasher.result_str().as_str(), &fs::read_to_string("./RizPS-Reborn-Custom-RSA-Keys/private.pem").unwrap());
     let mut headers = HeaderMap::new();
@@ -329,7 +329,7 @@ async fn afterplay(client_headers: HeaderMap, Json(post_body) : Json<AfterPlay_J
         HeaderName::from_static("sign"),
         HeaderValue::from_static(string_to_static_str(rsa_signed))
     );
-    (headers, aes_encrypt("Sv@H,+SV-U*VEjCW,n7WA-@n}j3;U;XF", "1%[OB.<YSw?)o:rQ".to_string(), "{\"data\": \"idk\"}"))
+    (headers, aes_encrypt("Sv@H,+SV-U*VEjCW,n7WA-@n}j3;U;XF", "1%[OB.<YSw?)o:rQ".to_string(), "{\"newDot\"999,\"deltaDot\": 999,\"dropedItems\":[],\"dropedLevels\":[]}"))
 }
 
 async fn NetWorkTest() -> &'static str{
@@ -353,7 +353,7 @@ async fn songs_download(axum::extract::Path(down_url): axum::extract::Path<HashM
 
 async fn logback() -> (HeaderMap, String){
     let mut logback_hasher = Md5::new();
-    let origin_text = String::from("{\"data\": \"idk\"}");
+    let origin_text = String::from("success");
     logback_hasher.input_str(&origin_text);
     let rsa_signed: String = rsa_private_encrypt(logback_hasher.result_str().as_str(), &fs::read_to_string("./RizPS-Reborn-Custom-RSA-Keys/private.pem").unwrap());
     let mut headers = HeaderMap::new();

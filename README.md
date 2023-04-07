@@ -92,9 +92,9 @@ $env:OPENSSL_DIR="C:\Program Files\OpenSSL-Win64"
 
 ## 3.安装或制作RizPS-Reborn定制游戏客户端
 ### 直接下载并安装RizPS-Reborn定制客户端（推荐）
-Android：https://anonfiles.com/lb7eg6O0y8/Rizline_For_RizPS_1.0.2_2.0_apk 下载并直接安装即可 打开下载链接需要梯子
+Android：https://drive.google.com/file/d/10WJjUsnQ0btQWZu9Pw1jYgcOP_Z3JoD8/view?usp=sharing 下载并直接安装即可 打开下载链接需要梯子
 
-iOS：https://anonfiles.com/b9R645T9y9/Payload_ipa 打开下载链接需要梯子 请看下方安装教程安装：
+iOS：https://drive.google.com/file/d/1Yc7otQH9tXZ2d04bh6_dC_MAXfsbMBGW/view?usp=sharing 打开下载链接需要梯子 请看下方安装教程安装：
 
 安装[iTunes](https://www.apple.com/itunes/download/win64)
 

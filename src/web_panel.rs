@@ -24,6 +24,8 @@ pub async fn start_webpanel(listen_ip: String,listen_port: String) {
         .route("/aclist/:token",any(get_aclist_html))
         .route("/aclist/js/:token",any(get_aclist_js))
         .route("/ac_deatil/:username/:token",any(get_user_deatil))
+        .route("/create_ac/after_sdk/:username/:gamename/:token",any(create_account_sdklogin))
+        .route("/create_ac/guestlogindo/:username/:token",any(create_account_guestlogin))
         .route("/", any(get_root));
 
     let tls_config = RustlsConfig::from_pem_file(
@@ -35,6 +37,40 @@ pub async fn start_webpanel(listen_ip: String,listen_port: String) {
         .serve(app.into_make_service())
         .await
         .unwrap();
+}
+
+async fn create_account_guestlogin(axum::extract::Path(down_url): axum::extract::Path<HashMap<String,String>>) -> (HeaderMap,String){
+    unsafe {
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            HeaderName::from_static("content-type"),
+            HeaderValue::from_static("text/html")
+        );
+        if(ALLOW_TOKENS.contains(down_url.get("token").unwrap())){
+            let ret = crate::commands::create_a_sdkchecklogindo_account_no_sdklogin(down_url.get("username").unwrap()).to_string();
+            (headers,ret)
+        }
+        else{
+            (headers,"Token ERROR".to_string())
+        }
+    }
+}
+
+async fn create_account_sdklogin(axum::extract::Path(down_url): axum::extract::Path<HashMap<String,String>>) -> (HeaderMap,String){
+    unsafe {
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            HeaderName::from_static("content-type"),
+            HeaderValue::from_static("text/html")
+        );
+        if(ALLOW_TOKENS.contains(down_url.get("token").unwrap())){
+            let ret = crate::commands::create_a_sdklogin_account(down_url.get("username").unwrap(),down_url.get("gamename").unwrap()).to_string();
+            (headers,ret)
+        }
+        else{
+            (headers,"Token ERROR".to_string())
+        }
+    }
 }
 
 async fn get_user_deatil(axum::extract::Path(down_url): axum::extract::Path<HashMap<String,String>>) -> (HeaderMap,String){

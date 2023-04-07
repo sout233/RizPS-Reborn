@@ -72,7 +72,7 @@ pub struct AfterPlay_JSON {
     pub completeRate: f32,
     pub maxPerfect: u32,
     pub perfect: u32,
-    pub miss: u32,
+    pub miss: i32,
     pub bad: u32,
     pub early: u32,
     pub late: u32,

@@ -19,3 +19,40 @@ function open_account_list_page(){
         }
     }
 }
+
+function crac_sdk(){
+    var usname = prompt("请输入新用户的username：", "");
+    var gnname = prompt("请输入新用户的gamename：", "");
+    var httpRequeste = new XMLHttpRequest();
+    httpRequeste.open("GET","/create_ac/after_sdk/" + usname + "/" +  gnname + "/" + document.getElementById("token_div").textContent,true);
+    httpRequeste.send();
+    httpRequeste.onreadystatechange = ()=>{
+        if(httpRequeste.readyState == 4 && httpRequeste.status == 200){
+            data = httpRequeste.responseText
+            if(data == "true"){
+                alert("创建成功")
+            }
+            else{
+                alert("服务器未返回true，可能是出现报错，responsetext: " + data)
+            }
+        }
+    }
+}
+
+function crac_gst(){
+    var usname = prompt("请输入新用户的username：", "");
+    var httpRequeste = new XMLHttpRequest();
+    httpRequeste.open("GET","/create_ac/guestlogindo/" + usname + "/" + document.getElementById("token_div").textContent,true);
+    httpRequeste.send();
+    httpRequeste.onreadystatechange = ()=>{
+        if(httpRequeste.readyState == 4 && httpRequeste.status == 200){
+            data = httpRequeste.responseText
+            if(data == "true"){
+                alert("创建成功")
+            }
+            else{
+                alert("服务器未返回true，可能是出现报错，responsetext: " + data)
+            }
+        }
+    }
+}
