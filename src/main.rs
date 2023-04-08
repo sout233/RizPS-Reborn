@@ -344,7 +344,7 @@ async fn resources_download(axum::extract::Path(down_url): axum::extract::Path<H
 }
 
 async fn songs_download(axum::extract::Path(down_url): axum::extract::Path<HashMap<String, String>>) -> Vec<u8>{
-    let mut req_file_path: String = "./resources/".to_string() + down_url.get("platform").unwrap() + &"/".to_string() + down_url.get("req_file_no_bundle").unwrap() + &".bundle".to_string();
+    let mut req_file_path: String = "./resources/".to_string() + down_url.get("platform").unwrap() + &"/".to_string() + down_url.get("req_file_no_bundle").unwrap();
     println!("{} -> 请求平台：{req_platform} 文件：{req_file_url}","Songs/Sheets.Download".purple(), req_platform = down_url.get("platform").unwrap(), req_file_url = down_url.get("req_file_no_bundle").unwrap());
     println!("{req_file_path}");
     let read_content = fs::read(req_file_path).unwrap();
@@ -475,6 +475,9 @@ async fn main() {
     let rt = Runtime::new().unwrap();//webui的runtime
 
     if(server_conf["webpanel"]["web_panel"].to_string().replace("\"", "") == "true") {
+        if(server_conf["webpanel"]["webpanel_password"].to_string().replace("\"", "") == "1234"){
+            println!("{} -> 您的WebUi被设置为启用，但密码未被修改，请立即修改密码，否则您的服务器安全将遭到威胁！密码可以在config.json中修改，您也可以选择直接在config.json中将WebUi设置为禁用，具体请查看RizPS-Reborn项目的README","SERVER.SECURITY".red());
+        }
         let webui_server_thread = thread::spawn(move || {
             rt.block_on(async{
                 let server_conf_file = fs::File::open("./config.json").unwrap();

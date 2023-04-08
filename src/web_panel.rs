@@ -26,6 +26,9 @@ pub async fn start_webpanel(listen_ip: String,listen_port: String) {
         .route("/ac_deatil/:username/:token",any(get_user_deatil))
         .route("/create_ac/after_sdk/:username/:gamename/:token",any(create_account_sdklogin))
         .route("/create_ac/guestlogindo/:username/:token",any(create_account_guestlogin))
+        .route("/delete_ac/:username/:token",any(delete_ac))
+        .route("/unlock/a/song/:username/:track/:token",any(unlock_song_for_ac))
+        .route("/unlock/all/song/:username/:token",any(unlock_ALLsong_for_ac))
         .route("/", any(get_root));
 
     let tls_config = RustlsConfig::from_pem_file(
@@ -37,6 +40,57 @@ pub async fn start_webpanel(listen_ip: String,listen_port: String) {
         .serve(app.into_make_service())
         .await
         .unwrap();
+}
+
+async fn unlock_ALLsong_for_ac(axum::extract::Path(down_url): axum::extract::Path<HashMap<String,String>>) -> (HeaderMap,String){
+    unsafe {
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            HeaderName::from_static("content-type"),
+            HeaderValue::from_static("text/html")
+        );
+        if(ALLOW_TOKENS.contains(down_url.get("token").unwrap())){
+            let ret = crate::commands::unlock_ALLtrack_for_ac(down_url.get("username").unwrap().to_owned());
+            (headers, ret.to_string())
+        }
+        else{
+            (headers,"Token ERROR".to_string())
+        }
+    }
+}
+
+async fn unlock_song_for_ac(axum::extract::Path(down_url): axum::extract::Path<HashMap<String,String>>) -> (HeaderMap,String){
+    unsafe {
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            HeaderName::from_static("content-type"),
+            HeaderValue::from_static("text/html")
+        );
+        if(ALLOW_TOKENS.contains(down_url.get("token").unwrap())){
+            let ret = crate::commands::unlock_track_for_ac(down_url.get("username").unwrap().to_owned(), down_url.get("track").unwrap().to_owned());
+            (headers, ret.to_string())
+        }
+        else{
+            (headers,"Token ERROR".to_string())
+        }
+    }
+}
+
+async fn delete_ac(axum::extract::Path(down_url): axum::extract::Path<HashMap<String,String>>) -> (HeaderMap,String){
+    unsafe {
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            HeaderName::from_static("content-type"),
+            HeaderValue::from_static("text/html")
+        );
+        if(ALLOW_TOKENS.contains(down_url.get("token").unwrap())){
+            let ret = crate::commands::delete_account(down_url.get("username").unwrap().to_owned());
+            (headers, ret.to_string())
+        }
+        else{
+            (headers,"Token ERROR".to_string())
+        }
+    }
 }
 
 async fn create_account_guestlogin(axum::extract::Path(down_url): axum::extract::Path<HashMap<String,String>>) -> (HeaderMap,String){

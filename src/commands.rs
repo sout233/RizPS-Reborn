@@ -1,6 +1,58 @@
-use crate::{get_user_account, isLogLevelHigh, structs};
+use crate::{get_serde_accountfile, get_user_account, isLogLevelHigh, structs};
 use crate::structs::{MyBest, RZPR_Accounts, RZPR_ACJson};
 use std::fs;
+use std::os::raw::c_void;
+
+pub fn unlock_ALLtrack_for_ac(target_username: String) -> bool{
+    let acjson = get_serde_accountfile();
+    if let Some(rzpr_account) = acjson.rzprac_items.iter().find(|rzpr_account| rzpr_account.sdklogin_username == target_username) {//iter_mut可以让其变得能够被修改
+        let mut new_account_struct = rzpr_account.to_owned();
+        new_account_struct.sdklogin_uklevels = crate::get_serde_basesdklogin().appearLevels;
+        let mut newacfile = crate::get_serde_accountfile();
+        let (index, _) = acjson.rzprac_items.clone().iter().enumerate().find(|(_, x)| *x.sdklogin_username == target_username).unwrap(); //找到旧的rzpr_accounts的索引
+        newacfile.rzprac_items.remove(index);
+        newacfile.rzprac_items.push(new_account_struct.to_owned());
+        let json:String = serde_json::to_string(&newacfile).unwrap();
+        fs::write("./accounts.rzpr", json);
+        return true
+    }
+    else{
+        return false
+    }
+}
+
+pub fn unlock_track_for_ac(target_username: String,need_unlock_track: String) -> bool{
+    let acjson = get_serde_accountfile();
+    if let Some(rzpr_account) = acjson.rzprac_items.iter().find(|rzpr_account| rzpr_account.sdklogin_username == target_username) {//iter_mut可以让其变得能够被修改
+        let mut new_account_struct = rzpr_account.to_owned();
+        new_account_struct.sdklogin_uklevels.push(need_unlock_track);
+        let mut newacfile = crate::get_serde_accountfile();
+        let (index, _) = acjson.rzprac_items.clone().iter().enumerate().find(|(_, x)| *x.sdklogin_username == target_username).unwrap(); //找到旧的rzpr_accounts的索引
+        newacfile.rzprac_items.remove(index);
+        newacfile.rzprac_items.push(new_account_struct.to_owned());
+        let json:String = serde_json::to_string(&newacfile).unwrap();
+        fs::write("./accounts.rzpr", json);
+        return true
+    }
+    else{
+        return false
+    }
+}
+
+pub fn delete_account(target_username: String) -> bool{
+    let acjson = get_serde_accountfile();
+    if let Some(rzpr_account) = acjson.rzprac_items.iter().find(|rzpr_account| rzpr_account.sdklogin_username == target_username) {
+        let mut newacfile = crate::get_serde_accountfile();
+        let (index, _) = acjson.rzprac_items.clone().iter().enumerate().find(|(_, x)| *x.sdklogin_username == target_username).unwrap(); //找到要删除的rzpr_accounts的索引
+        newacfile.rzprac_items.remove(index);
+        let json:String = serde_json::to_string(&newacfile).unwrap();//删掉保存，一气呵成
+        fs::write("./accounts.rzpr", json);
+        return true
+    }
+    else{
+        return false
+    }
+}
 
 pub fn create_a_sdkchecklogindo_account_no_sdklogin(new_username: &str) -> bool{
     let mut new_user_account_struct = structs::RZPR_Accounts{
