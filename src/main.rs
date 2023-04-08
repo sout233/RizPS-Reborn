@@ -377,7 +377,7 @@ async fn get_ios_shadowsocks_conf() -> String{
 
 #[tokio::main]
 async fn main() {
-    println!("\n- {} -\nRizPS-Reborn是免费且永久开源的软件，并遵循GPL-3开源协议，这意味着你若要发布修改后的RizPS-Reborn，则必须同时开源。如果你是通过购买的方式得到了该软件，那么这代表你已经被骗了，请给店家差评并申请退款。\n感谢任何对此项目提出建议/报告问题/贡献代码的人，我爱你们！\n","RizPS-Reborn v1.0.2".bright_blue());
+    println!("\n- {} -\nRizPS-Reborn是免费且永久开源的软件，并遵循GPL-3开源协议，这意味着你若要发布修改后的RizPS-Reborn，则必须同时开源。如果你是通过购买的方式得到了该软件，那么这代表你已经被骗了，请给店家差评并申请退款。\n感谢任何对此项目提出建议/报告问题/贡献代码的人，我爱你们！\n","RizPS-Reborn v2.0.0".bright_blue());
 
     if(!Path::new("./req_files").exists()){
         println!("{} -> req_files文件夹不存在，无法在此文件夹不存在的情况下继续维持RizPS-Reborn的运行，结束运行！","SERVER.INIT.ERROR".red());
