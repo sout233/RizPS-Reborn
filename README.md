@@ -18,6 +18,8 @@ RizPS-Reborn可实现让你无任何限制地随意畅玩这款游戏。RizPS-Re
 [ ] catalog动态调控
 
 ## 运行要求
+***RizPS-Reborn目前仅支持游戏客户端的港澳台版本，请注意这点***
+
 RizPS-Reborn的运行本身并没有任何特殊要求，只需要一台运行Windows操作系统的电脑，若您正在使用MacOS或Linux，也可以自行下载源代码进行编译运行
 
 但RizPS-Reborn需要与 **某款简约风全屏判定音乐游戏** 建立连接后才能发挥其作用，并且为了让游戏与RizPS-Reborn连接，您也需要对您自己的手机进行些许 **系统级** 的修改。为了做出这些修改，如果您正在使用iOS，那么您必须拥有一个未被Apple进行任何限制的Apple ID；若您正在使用Android，则 **必须拥有root权限**，并确保根目录和System分区可写。

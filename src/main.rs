@@ -364,6 +364,39 @@ async fn logback() -> (HeaderMap, String){
     (headers, aes_encrypt("Sv@H,+SV-U*VEjCW,n7WA-@n}j3;U;XF", "1%[OB.<YSw?)o:rQ".to_string(), "success"))
 }
 
+//国际版rhythnet
+
+async fn global_sdk_checkemail() -> String{
+    "{\"code\":0}".to_string()
+}
+
+async fn global_sdk_login() -> (HeaderMap,String){
+    let mut headers = HeaderMap::new();
+    headers.insert(
+        HeaderName::from_static("set_token"),
+        HeaderValue::from_static("ee")
+    );
+    (headers,"{\"code\":0,\"msg\":\"{\\\"email\\\":\\\"RizPS-Reborn 实验性 RhythNET 支持\\\",\\\"avatar\\\":{\\\"name\\\":\\\"testAvatar\\\",\\\"portrait\\\":\\\"\\\"}}\"}".to_string())
+}
+
+async fn global_game_rnlogin() -> (StatusCode, HeaderMap, String) {
+    println!("{} -> 客户端正在尝试下载存档数据","GLOBAL.RNLOGIN".yellow());
+    let mut sdklogin_hasher = Md5::new();
+    let origin_text = fs::read_to_string("SDKLogin.json").unwrap();
+    sdklogin_hasher.input_str(&origin_text);
+    let rsa_signed: String = rsa_private_encrypt(sdklogin_hasher.result_str().as_str(), &fs::read_to_string("./RizPS-Reborn-Custom-RSA-Keys/private.pem").unwrap());
+    let mut headers = HeaderMap::new();
+    headers.insert(
+        HeaderName::from_static("sign"),
+        HeaderValue::from_static(string_to_static_str(rsa_signed))
+    );
+    headers.insert(
+        HeaderName::from_static("verify"),
+        HeaderValue::from_static("ee")
+    );
+    return (StatusCode::OK,headers, aes_encrypt("Sv@H,+SV-U*VEjCW,n7WA-@n}j3;U;XF", "1%[OB.<YSw?)o:rQ".to_string(), origin_text.as_str()))
+}
+
 //为后端运营面板或各种插件提供的接口
 
 async fn get_test() -> &'static str{
@@ -442,6 +475,9 @@ async fn main() {
         .route("/isc", any(get_ios_shadowsocks_conf))
         .route("/test", any(NetWorkTest))
         .route("/logBack",any(logback))//在切屏后返回rizline时请求，不响应游戏会寄
+        .route("/account/check_email",any(global_sdk_checkemail))
+        .route("/account/login",any(global_sdk_login))
+        .route("/game/rn_login",any(global_game_rnlogin))
         .route("/testasset/:platform/:file", any(resources_download))
         .route("/songsdata/:platform/cridata_assets_criaddressables/:req_file_no_bundle", any(songs_download))
         .route("/checklive", any(get_test));
